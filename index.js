@@ -3,9 +3,13 @@ const LAYER_COUNTS = [3, 5, 4, 1, 1];
 
 var worker = new Worker("worker.js");
 
-const button = document.querySelector("button");
-let count = 1;
+const start = document.querySelector("#start");
+const stop = document.querySelector("#stop");
 
-button.addEventListener("click", () => {
+start.addEventListener("click", () => {
     worker.postMessage(1);
+});
+
+stop.addEventListener("click", () => {
+    worker.postMessage(0);
 });

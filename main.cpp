@@ -12,8 +12,7 @@ class NeuralNetwork {
         std::vector<std::vector<std::vector<float>>> _layers;
         std::vector<std::vector<std::vector<float>>> _gradients;
         std::vector<std::vector<std::vector<float>>> _change_by;
-        bool _run = true;
-        volatile char _switcher = 0;
+        bool _training_switch = false;
 
         class TrainingPair {
 
@@ -39,9 +38,7 @@ class NeuralNetwork {
         std::vector<TrainingPair> _training_pair_list;
 
     public:
-        NeuralNetwork() {
-            _run = true;
-        };
+        NeuralNetwork() = default;
 
         int set_layer_counts(emscripten::val js_layers) {
             _layer_counts = emscripten::convertJSArrayToNumberVector<int>(js_layers);
@@ -57,26 +54,21 @@ class NeuralNetwork {
             return 0;
         }   
 
-        void set_run_status(bool status) {
-            _run = status;
-        }
-
         bool get_run_status() {
-            return _run;
+            return _training_switch;
         }
 
-        void start_test() {
-            console << "hi" << std::endl;
+        void train(int count) {
+            _training_switch = true;
+            for (int i = 0; i < count; i++) {
+                console << "Hi" << std::endl;
+            }
         }
 
-        void stop_test() {
-            _run = false;
+        void stop_training() {
+            _training_switch = false;
         }
 };
-
-EM_JS(bool, check_run, (), {
-    console.log("hi");
-});
 
 void sleep_and_print() {
     sleep(5);
@@ -105,11 +97,9 @@ EMSCRIPTEN_BINDINGS(neural_visual) {
         .constructor()
         .function("setLayerCounts", &NeuralNetwork::set_layer_counts)
         .function("addTrainingPair", &NeuralNetwork::add_training_pair)
-        .function("startTest", &NeuralNetwork::start_test)
-        .function("stopTest", &NeuralNetwork::stop_test)
-        .function("getRunStatus", &NeuralNetwork::get_run_status)
-        .function("setRunStatus", &NeuralNetwork::set_run_status);
+        .function("train", &NeuralNetwork::train)
+        .function("stopTraining", &NeuralNetwork::stop_training)
+        .function("getRunStatus", &NeuralNetwork::get_run_status);
     emscripten::function("sleepAndPrint", &sleep_and_print);
-    emscripten::function("checkRun", &check_run);
 }
 
