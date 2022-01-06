@@ -1,21 +1,23 @@
 #include <iostream>
+#include <emscripten.h>
 #include <emscripten/bind.h>
 #include <unistd.h>
 #define console std::cout << "[C++] "
 
-
 class NeuralNetwork {
-    private:
 
+    private:
         float _learning_rate;
         std::vector<int> _layer_counts;
         std::vector<std::vector<std::vector<float>>> _layers;
         std::vector<std::vector<std::vector<float>>> _gradients;
         std::vector<std::vector<std::vector<float>>> _change_by;
+        bool _run = true;
+        volatile char _switcher = 0;
 
         class TrainingPair {
-            public: 
 
+            public: 
                 TrainingPair(emscripten::val &input_val, emscripten::val &output_val) {
                     _input_vector = emscripten::convertJSArrayToNumberVector<float>(input_val);
                     _output_vector = emscripten::convertJSArrayToNumberVector<float>(output_val);
@@ -30,7 +32,6 @@ class NeuralNetwork {
                 }
 
             private:
-
                 std::vector<float> _input_vector;
                 std::vector<float> _output_vector;
         };
@@ -38,8 +39,9 @@ class NeuralNetwork {
         std::vector<TrainingPair> _training_pair_list;
 
     public:
-
-        NeuralNetwork() = default;
+        NeuralNetwork() {
+            _run = true;
+        };
 
         int set_layer_counts(emscripten::val js_layers) {
             _layer_counts = emscripten::convertJSArrayToNumberVector<int>(js_layers);
@@ -54,7 +56,27 @@ class NeuralNetwork {
             _training_pair_list.push_back(TrainingPair(input_val, output_val));
             return 0;
         }   
+
+        void set_run_status(bool status) {
+            _run = status;
+        }
+
+        bool get_run_status() {
+            return _run;
+        }
+
+        void start_test() {
+            console << "hi" << std::endl;
+        }
+
+        void stop_test() {
+            _run = false;
+        }
 };
+
+EM_JS(bool, check_run, (), {
+    console.log("hi");
+});
 
 void sleep_and_print() {
     sleep(5);
@@ -82,7 +104,12 @@ EMSCRIPTEN_BINDINGS(neural_visual) {
     emscripten::class_<NeuralNetwork>("NeuralNetwork")
         .constructor()
         .function("setLayerCounts", &NeuralNetwork::set_layer_counts)
-        .function("addTrainingPair", &NeuralNetwork::add_training_pair);
+        .function("addTrainingPair", &NeuralNetwork::add_training_pair)
+        .function("startTest", &NeuralNetwork::start_test)
+        .function("stopTest", &NeuralNetwork::stop_test)
+        .function("getRunStatus", &NeuralNetwork::get_run_status)
+        .function("setRunStatus", &NeuralNetwork::set_run_status);
     emscripten::function("sleepAndPrint", &sleep_and_print);
+    emscripten::function("checkRun", &check_run);
 }
 

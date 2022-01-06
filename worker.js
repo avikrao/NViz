@@ -12,9 +12,27 @@ Module.onRuntimeInitialized = async () => {
         layerCounts.push(jsonPairs[0]["out"].length);
     console.log(layerCounts);
     const NeuralNetwork = new Module.NeuralNetwork();
+
+    onmessage = () => {
+        console.log("hi");
+        NeuralNetwork.stopTest();
+    }
+
     NeuralNetwork.setLayerCounts(LAYER_COUNTS);
     for (let jsonPair of jsonPairs) {
         NeuralNetwork.addTrainingPair(jsonPair["in"], jsonPair["out"]);
     }
-    Module.sleepAndPrint();
+
+    setTimeout(() => {
+        NeuralNetwork.stopTest();
+    }, 500)
+
+    while (NeuralNetwork.getRunStatus()) {
+        NeuralNetwork.startTest();
+        await new Promise((resolve) => setTimeout(resolve));
+    }
+
+
+    // 1547, 5.16
 };
+

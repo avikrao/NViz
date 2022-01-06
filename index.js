@@ -5,6 +5,7 @@ var worker = new Worker("worker.js");
 
 const button = document.querySelector("button");
 let count = 1;
+
 button.addEventListener("click", () => {
-    console.log("clicked " + (count++).toString());
+    worker.postMessage(1);
 });
