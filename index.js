@@ -1,5 +1,5 @@
 const LEARNING_RATE = 0.08;
-const LAYER_COUNTS = [3, 5, 4, 1, 1];
+const LAYER_COUNTS = [5, 4, 1];
 
 var worker = new Worker("worker.js");
 

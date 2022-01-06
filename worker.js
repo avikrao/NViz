@@ -1,8 +1,8 @@
 self.importScripts("main.js");
 
 const LEARNING_RATE = 0.08;
-const LAYER_COUNTS = [3, 5, 4, 1, 1];
-let found = false;
+const LAYER_COUNTS = [5, 4, 1];
+let completedIterations = 0;
 
 Module.onRuntimeInitialized = async () => {
     const dataFetch = await fetch("./dataset.json");
@@ -19,26 +19,21 @@ Module.onRuntimeInitialized = async () => {
             case 0 :
                 console.log("Stopped training.")
                 NeuralNetwork.stopTraining();
+                console.log(`Completed iterations: ${completedIterations}`);
                 break;
             case 1 :
                 console.log("Beginning training.");
                 do {
-                    NeuralNetwork.train(100);
+                    completedIterations = NeuralNetwork.train(100);
                     await new Promise((resolve) => setTimeout(resolve));
                 } while (NeuralNetwork.getRunStatus());
                 break;
         }
     }
 
-    NeuralNetwork.setLayerCounts(LAYER_COUNTS);
+    NeuralNetwork.setLayerCounts(layerCounts);
     for (let jsonPair of jsonPairs) {
         NeuralNetwork.addTrainingPair(jsonPair["in"], jsonPair["out"]);
     }
-
-    while (NeuralNetwork.getRunStatus()) {
-        NeuralNetwork.train(100);
-        await new Promise((resolve) => setTimeout(resolve));
-    } 
-
 };
 
