@@ -1,9 +1,17 @@
 #include <iostream>
 #include <emscripten/bind.h>
-#define console std::cout << "[C++]"
+#include <unistd.h>
+#define console std::cout << "[C++] "
+
 
 class NeuralNetwork {
     private:
+
+        float _learning_rate;
+        std::vector<int> _layer_counts;
+        std::vector<std::vector<std::vector<float>>> _layers;
+        std::vector<std::vector<std::vector<float>>> _gradients;
+        std::vector<std::vector<std::vector<float>>> _change_by;
 
         class TrainingPair {
             public: 
@@ -33,6 +41,11 @@ class NeuralNetwork {
 
         NeuralNetwork() = default;
 
+        int set_layer_counts(emscripten::val js_layers) {
+            _layer_counts = emscripten::convertJSArrayToNumberVector<int>(js_layers);
+            return 0;
+        }
+
         std::vector<TrainingPair> training_pairs() {
             return _training_pair_list;
         }
@@ -43,6 +56,11 @@ class NeuralNetwork {
         }   
 };
 
+void sleep_and_print() {
+    sleep(5);
+    console << "Slept.";
+    std::cout << std::endl;
+}
 
 int change_first(std::vector<int> &v) {
     v[0] = 10000;
@@ -63,6 +81,8 @@ EMSCRIPTEN_BINDINGS(neural_visual) {
     emscripten::function("printJSArray", &print_js_array);
     emscripten::class_<NeuralNetwork>("NeuralNetwork")
         .constructor()
+        .function("setLayerCounts", &NeuralNetwork::set_layer_counts)
         .function("addTrainingPair", &NeuralNetwork::add_training_pair);
+    emscripten::function("sleepAndPrint", &sleep_and_print);
 }
 
