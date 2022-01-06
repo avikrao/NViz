@@ -2,26 +2,47 @@
 #include <emscripten/bind.h>
 #define console std::cout << "[C++]"
 
-class TrainingPair {
-public: 
+class NeuralNetwork {
+    private:
 
-    TrainingPair(emscripten::val input_val, emscripten::val output_val) {
-        input_vector = emscripten::convertJSArrayToNumberVector<float>(input_val);
-        output_vector = emscripten::convertJSArrayToNumberVector<float>(output_val);
-    }
+        class TrainingPair {
+            public: 
 
-    std::vector<float> inputs() {
-        return input_vector;
-    }
+                TrainingPair(emscripten::val &input_val, emscripten::val &output_val) {
+                    _input_vector = emscripten::convertJSArrayToNumberVector<float>(input_val);
+                    _output_vector = emscripten::convertJSArrayToNumberVector<float>(output_val);
+                }
 
-    std::vector<float> outputs() {
-        return output_vector;
-    }
+                std::vector<float> inputs() {
+                    return _input_vector;
+                }
 
-private:
-    std::vector<float> input_vector;
-    std::vector<float> output_vector;
+                std::vector<float> outputs() {
+                    return _output_vector;
+                }
+
+            private:
+
+                std::vector<float> _input_vector;
+                std::vector<float> _output_vector;
+        };
+
+        std::vector<TrainingPair> _training_pair_list;
+
+    public:
+
+        NeuralNetwork() = default;
+
+        std::vector<TrainingPair> training_pairs() {
+            return _training_pair_list;
+        }
+
+        int add_training_pair(emscripten::val input_val, emscripten::val output_val) {
+            _training_pair_list.push_back(TrainingPair(input_val, output_val));
+            return 0;
+        }   
 };
+
 
 int change_first(std::vector<int> &v) {
     v[0] = 10000;
@@ -40,10 +61,8 @@ int print_js_array(const emscripten::val &v) {
 EMSCRIPTEN_BINDINGS(neural_visual) {
     emscripten::function("change_first", &change_first);
     emscripten::function("printJSArray", &print_js_array);
-    emscripten::class_<TrainingPair>("TrainingPair")
-        .constructor<emscripten::val, emscripten::val>()
-        .function("inputs", &TrainingPair::inputs)
-        .function("outputs", &TrainingPair::outputs);
-    emscripten::register_vector<TrainingPair>("TrainingPairList");
+    emscripten::class_<NeuralNetwork>("NeuralNetwork")
+        .constructor()
+        .function("addTrainingPair", &NeuralNetwork::add_training_pair);
 }
 

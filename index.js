@@ -5,9 +5,8 @@ Module.onRuntimeInitialized = async () => {
     const dataFetch = await fetch("./dataset.json");
     const jsonData = await dataFetch.json();
     const jsonPairs = jsonData["data"];
-    const trainingList = new Module.TrainingPairList();
-    for (let pair of jsonPairs) {
-        trainingList.push_back(new Module.TrainingPair(pair["in"], pair["out"]));
+    const NeuralNetwork = new Module.NeuralNetwork();
+    for (let jsonPair of jsonPairs) {
+        NeuralNetwork.addTrainingPair(jsonPair["in"], jsonPair["out"]);
     }
-    
 };
