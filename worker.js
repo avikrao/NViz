@@ -12,7 +12,15 @@ Module.onRuntimeInitialized = async () => {
         layerCounts = layerCounts.concat(LAYER_COUNTS);
         layerCounts.push(jsonPairs[0]["out"].length);
     console.log(layerCounts);
+
     const NeuralNetwork = new Module.NeuralNetwork();
+
+    NeuralNetwork.setLearningRate(LEARNING_RATE);
+    NeuralNetwork.setLayerCounts(layerCounts);
+
+    for (let jsonPair of jsonPairs) {
+        NeuralNetwork.addTrainingPair(jsonPair["in"], jsonPair["out"]);
+    }
 
     onmessage = async (message) => {
         switch (message.data) {
@@ -24,16 +32,13 @@ Module.onRuntimeInitialized = async () => {
             case 1 :
                 console.log("Beginning training.");
                 do {
-                    completedIterations = NeuralNetwork.train(100);
+                    completedIterations = NeuralNetwork.train(100000);
                     await new Promise((resolve) => setTimeout(resolve));
                 } while (NeuralNetwork.getRunStatus());
                 break;
         }
     }
 
-    NeuralNetwork.setLayerCounts(layerCounts);
-    for (let jsonPair of jsonPairs) {
-        NeuralNetwork.addTrainingPair(jsonPair["in"], jsonPair["out"]);
-    }
+    
 };
 

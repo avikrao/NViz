@@ -213,12 +213,15 @@ class NeuralNetwork {
     public:
         NeuralNetwork() = default;
 
-        int set_layer_counts(emscripten::val js_layers) {
+        void set_learning_rate(int rate) {
+            _learning_rate = rate;
+        }
+
+        void set_layer_counts(emscripten::val js_layers) {
             _layer_counts = emscripten::convertJSArrayToNumberVector<int>(js_layers);
             _layers = _create_layer_structure(true);
             _gradients = _create_layer_structure(false);
             _change_by = _create_layer_structure(false);
-            return 0;
         }
 
         std::vector<TrainingPair> training_pairs() {
@@ -242,7 +245,7 @@ class NeuralNetwork {
                 }
                 _backpropagate(_training_pair_list.at(_next_training_pair).inputs(), _training_pair_list.at(_next_training_pair).output_entry(0));
             }
-            
+
             return _completed_iterations;
         }
 
@@ -277,6 +280,7 @@ EMSCRIPTEN_BINDINGS(neural_visual) {
     emscripten::function("printJSArray", &print_js_array);
     emscripten::class_<NeuralNetwork>("NeuralNetwork")
         .constructor()
+        .function("setLearningRate", &NeuralNetwork::set_learning_rate)
         .function("setLayerCounts", &NeuralNetwork::set_layer_counts)
         .function("addTrainingPair", &NeuralNetwork::add_training_pair)
         .function("train", &NeuralNetwork::train)
