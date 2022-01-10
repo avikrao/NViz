@@ -7,6 +7,7 @@ module.exports = {
     extend: {},
   },
   plugins: [
-    require('./node_modules/tailwind-percentage-heights-plugin')()
+    require('./node_modules/tailwind-percentage-heights-plugin')(),
+    require("daisyui"),
   ],
 }
