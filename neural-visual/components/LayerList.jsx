@@ -43,10 +43,10 @@ const NewLayerButton = ({onAdd}) => {
     );
 }
 
-const LayerList = ({inputs, outputs}) => {
+const LayerList = ({inputs, outputs, layers, onLayersSet}) => {
     const [inputCount, setInputs] = useState(inputs);
     const [outputCount, setOutputs] = useState(outputs);
-    const [layerCounts, setLayers] = useState([2, 3, 5]);
+    const [layerCounts, setLayers] = useState(layers);
     const [canAdd, setCanAdd] = useState(true);
 
     const keyCount = useRef(0);
@@ -91,6 +91,7 @@ const LayerList = ({inputs, outputs}) => {
 
     const addNewLayer = () => {
         setLayers([...layerCounts, 1]);
+        onLayersSet([...layerCounts, 1]);
         if (layerCounts.length >= 7) {
             setCanAdd(false);
         }
@@ -98,6 +99,7 @@ const LayerList = ({inputs, outputs}) => {
 
     const deleteLayer = (layerIndex) => {
         setLayers(layerCounts.filter((count, index) => index != layerIndex));
+        onLayersSet(layerCounts.filter((count, index) => index != layerIndex));
         if (layerCounts.length <= 8) {
             setCanAdd(true);
         }
@@ -107,6 +109,7 @@ const LayerList = ({inputs, outputs}) => {
         const updatedLayers = Array.from(layerCounts);
         updatedLayers[layerIndex] = newCount;
         setLayers([...updatedLayers]);
+        onLayersSet([...updatedLayers]);
     }
 
     return (
@@ -114,7 +117,7 @@ const LayerList = ({inputs, outputs}) => {
 
             <div className='flex flex-row w-1/6 border-2 border-teal-700 rounded-xl items-center overflow-hidden mr-4'>
                 <div className='flex w-1/2 bg-teal-700 text-gray-300 justify-center border-r-2 border-teal-700 h-full items-center'>
-                    <p>Inputs:</p>
+                    <p className='w-full text-center items-center justify-center break-all'>Inputs:</p>
                 </div>
                 <div className='flex flex-col w-1/2 h-full'>
                     <div className="flex h-full">
@@ -134,8 +137,8 @@ const LayerList = ({inputs, outputs}) => {
             </div>
 
             <div className='flex flex-row w-1/6 border-2 border-teal-700 rounded-xl items-center overflow-hidden ml-auto' >
-                <div className='flex w-1/2 bg-teal-700 text-gray-300 justify-center border-r-2 border-teal-700 h-full items-center text-sm'>
-                    <p>Outputs:</p>
+                <div className='flex flex-shrink-0 w-1/2 bg-teal-700 text-gray-300 justify-center border-r-2 border-teal-700 h-full items-center text-sm'>
+                    <p className='w-full justify-center items-center text-center break-all'>Outputs:</p>
                 </div>
                 <div className='flex flex-col w-1/2 h-full'>
                     <div className="flex h-full">

@@ -196,12 +196,17 @@ class NeuralNetwork {
                             _sigmoid_deriv(a.at(layer + 1 + a.size()).at(out));
                     }
 
-                    for (int layer = 0; layer < _layers.size(); layer++) {
-                        for (int node = 0; node < _layers.at(layer).size(); node++) {
-                            for (int weight = 0; weight < _layers.at(layer).at(node).size(); weight++) {
-                                _layers.at(layer).at(node).at(weight) += _learning_rate * _change_by.at(layer).at(node).at(weight);
-                            }
-                        }
+                    for (int node = 0; node < _layer_counts.at(layer-1 + _layer_counts.size()); node++) {
+                        _gradients.at(layer + _gradients.size()).at(out).at(node) = grad_out;
+                        _change_by.at(layer + _change_by.size()).at(out).at(node) = grad_out * a.at(layer + a.size()).at(node);
+                    }
+                }
+            }
+
+            for (int layer = 0; layer < _layers.size(); layer++) {
+                for (int node = 0; node < _layers.at(layer).size(); node++) {
+                    for (int weight = 0; weight < _layers.at(layer).at(node).size(); weight++) {
+                        _layers[layer][node][weight] += _learning_rate * _change_by.at(layer).at(node).at(weight);
                     }
                 }
             }
@@ -213,7 +218,7 @@ class NeuralNetwork {
     public:
         NeuralNetwork() = default;
 
-        void set_learning_rate(int rate) {
+        void set_learning_rate(float rate) {
             _learning_rate = rate;
         }
 

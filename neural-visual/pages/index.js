@@ -1,14 +1,47 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactFlow, { Background } from 'react-flow-renderer';
 import LayerList from '../components/LayerList';
+import FlowInputNode from '../components/FlowInputNode';
+import FlowBiasNode from '../components/FlowBiasNode';
+import FlowOutputNode from '../components/FlowOutputNode';
+import FlowLayerNode from '../components/FlowLayerNode';
 
 const learningRateLimits = [0.01, 0.5];
 const trainingSpeedLimits = [1, 100000];
+
+const nodes = [
+  {
+    id: '1',
+    type: 'inputNode',
+    data: { label: 'Node 1' },
+    position: { x: 100, y: 100 }
+  },
+  {
+    id: '2',
+    type: 'biasNode',
+    data: { label: 'Node 2' },
+    position: { x: 100, y: 200 }
+  },
+  {
+    id: '3',
+    type: 'layerNode',
+    data: { label: 'Node 3' },
+    position: { x: 200, y: 150 }
+  },
+  {
+    id: '4',
+    type: 'outputNode',
+    data: { label: 'Node 4' },
+    position: { x: 300, y: 150 }
+  }
+]
 
 export default function Index() {
 
   const [learningRate, setLearningRate] = useState(0.1);
   const [trainingSpeed, setTrainingSpeed] = useState(100000);
+  const [fileVisible, setFileVisibility] = useState(false);
+  const [layerList, setLayerList] = useState([2, 5, 3]);
 
   const worker = useRef();
   const textLearningRate = useRef();
@@ -70,13 +103,13 @@ export default function Index() {
 
         <div className="w-1/6 flex flex-col">
           <label className='uppercase text-teal-600 text-sm ml-6 mt-2 h-1/6'>Input file</label>
-          <input type="file" className='ml-6 my-2 h-full text-white hover:cursor-pointer'></input>
+          <input type="file" className={`ml-6 my-2 h-full text-white hover:cursor-pointer ${fileVisible ? "" : "text-transparent"}`} onChange={() => setFileVisibility(true)}></input>
         </div>
 
         <div className="w-1/2 flex flex-col">
           <p className='flex uppercase text-teal-600 text-sm mt-2'>Layers</p>
           <div className='flex flex-row h-1/2 mt-1'>
-            <LayerList className="flex flex-row" inputs={3} outputs={1}></LayerList>
+            <LayerList className="flex flex-row" inputs={3} outputs={1} layers={layerList} onLayersSet={setLayerList}></LayerList>
           </div>
         </div>
 
@@ -105,7 +138,7 @@ export default function Index() {
       </div>
 
       <div className="h-full">
-        <ReactFlow className="bg-gray-900">
+        <ReactFlow className="bg-gray-900" elements={nodes} nodeTypes={{inputNode: FlowInputNode, biasNode: FlowBiasNode, outputNode: FlowOutputNode, layerNode: FlowLayerNode}}>
           <Background color="#fff"/>
         </ReactFlow>
       </div>
