@@ -36,9 +36,9 @@ const LayerNodeCount = ({ layerIndex, destructor, count, onUpdate}) => {
 const NewLayerButton = ({onAdd}) => {
     
     return (
-        <div className='flex w-12 h-3/4 border-teal-500 border-2 rounded-xl mr-3 text-white items-center justify-center my-0.5 hover:bg-teal-500 cursor-pointer hover:text-teal-900'
+        <div className='flex w-12 h-3/4 border-teal-500 border-2 rounded-xl mr-3 text-white items-center justify-center hover:bg-teal-500 cursor-pointer hover:text-teal-900'
             onClick={() => onAdd()}>
-            <p className='text-center text-3xl'>+</p>
+            <p className='text-center text-3xl h-full items-center justify-center m-auto border-2 border-transparent w-full'>+</p>
         </div>
     );
 }
