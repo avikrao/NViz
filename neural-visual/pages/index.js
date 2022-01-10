@@ -30,7 +30,7 @@ export default function Index() {
           <label className='uppercase text-teal-800 text-sm ml-6 mt-2 h-1/6'>Input file</label>
           <input type="file" className='ml-6 my-2 h-full text-white hover:cursor-pointer'></input>
         </div>
-        <div className="w-5/12 flex flex-col">
+        <div className="w-1/2 flex flex-col">
           <p className='flex uppercase text-teal-800 text-sm mt-2'>Layers</p>
           <div className='flex flex-row h-1/2 mt-1'>
             <LayerList className="flex flex-row" inputs={3} outputs={1}></LayerList>
