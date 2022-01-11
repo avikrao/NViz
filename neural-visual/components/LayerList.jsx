@@ -16,6 +16,12 @@ const LayerNodeCount = ({ layerIndex, destructor, count, onUpdate}) => {
         }
     }
 
+    const checkForEnter = (event) => {
+        if (event.keyCode === 13) {
+            validateAndSetCount(event.target.value);
+        }
+    }
+
     return (
         <div className='flex flex-col w-16 border-teal-500 border-2 h-full rounded-xl overflow-hidden mr-3'>
             <div className='flex h-1/4 border-b-teal-500 border-b-2 text-white items-center justify-center cursor-pointer hover:bg-red-500'
@@ -24,9 +30,10 @@ const LayerNodeCount = ({ layerIndex, destructor, count, onUpdate}) => {
             </div>
             <div className='flex h-full text-white w-full'>
                 <input type="text" className='bg-transparent text-center w-full outline-none' 
-                    value={nodeCount} 
+                    defaultValue={nodeCount} 
                     maxLength={3} 
-                    onChange={event => validateAndSetCount(event.target.value)}>
+                    onBlur={event => validateAndSetCount(event.target.value)}
+                    onKeyDown={event => checkForEnter(event)}>
                 </input>
             </div>
         </div>
@@ -117,7 +124,7 @@ const LayerList = ({inputs, outputs, layers, onLayersSet}) => {
         <div className='flex flex-row w-full justify-start'>
 
             <div className='flex flex-row w-1/6 border-2 border-teal-700 rounded-xl items-center overflow-hidden mr-4'>
-                <div className='flex w-1/2 bg-teal-700 text-gray-300 justify-center border-r-2 border-teal-700 h-full items-center'>
+                <div className='flex w-1/2 bg-teal-700 text-gray-300 justify-center border-r-2 border-teal-700 h-full items-center text-sm'>
                     <p className='w-full text-center items-center justify-center break-all'>Inputs:</p>
                 </div>
                 <div className='flex flex-col w-1/2 h-full'>
