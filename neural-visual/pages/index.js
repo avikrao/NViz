@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import ReactFlow, { Background } from 'react-flow-renderer';
+import ReactFlow, { addEdge, Background } from 'react-flow-renderer';
 import linspace from "exact-linspace";
 import LayerList from '../components/LayerList';
 import FlowInputNode from '../components/FlowInputNode';
@@ -45,7 +45,9 @@ export default function Index() {
   const [layerList, setLayerList] = useState([3, 2, 5, 3, 1]);
   const [nodeList, setNodeList] = useState(nodes);
   const [nodeIdTracker, setNodeIdTracker] = useState(1);
+  const [edgeIdTracker, setEdgeIdTracker] = useState(1);
   const [nodeMatrix, setNodeMatrix] = useState();
+  const [edgeMatrix, setEdgeMatrix] = useState();
 
   const worker = useRef();
   const textLearningRate = useRef();
@@ -57,54 +59,89 @@ export default function Index() {
 
   useEffect(() => {
 
-    console.log(layerList);
-
     const newNodes = [];
+    const newNodeMatrix = [[]];
+    const newEdgeMatrix = [];
     const maxHeight = Math.max(...layerList) * 100;
     let xCord = 100;
-    let idCount = 1;
+    let nodeIdCount = 0;
+    let edgeIdCount = 0;
 
     const inputsSpace = linspace(0, maxHeight, layerList[0]+3);
     for (let j = 1; j < inputsSpace.length - 2; j++) {
+      let nodeId = nodeIdTracker + (nodeIdCount++)
       newNodes.push({
-        id: nodeIdTracker + (idCount++),
+        id: nodeId,
         type: "inputNode",
         position: {x: xCord, y: inputsSpace[j]}
       });
+      newNodeMatrix[0].push(nodeId);
     }
 
+    let biasNodeId = nodeIdTracker + (nodeIdCount++)
     newNodes.push({
-      id: nodeIdTracker + (idCount++),
+      id: biasNodeId,
       type: "biasNode",
-      position: {x: xCord, y: inputsSpace.at(-2)}
+      position: {x: xCord, y: inputsSpace[inputsSpace.length-2]}
     });
+    newNodeMatrix[0].push(biasNodeId);
 
     for (let i = 1; i < layerList.length - 1; i++) {
       xCord += 200;
       let spaced = linspace(0, maxHeight, layerList[i]+2);
-
+      newNodeMatrix.push([]);
       for (let j = 1; j < spaced.length - 1; j++) {
+        let nodeId = nodeIdTracker + (nodeIdCount++);
         newNodes.push({
-          id: nodeIdTracker + (idCount++),
+          id: nodeId,
           type: "layerNode",
           position: {x: xCord, y: spaced[j]}
         });
+        newNodeMatrix[newNodeMatrix.length-1].push(nodeId);
       }
     }
 
     xCord += 200;
     const outputsSpace = linspace(0, maxHeight, layerList[layerList.length-1]+2);
+    newNodeMatrix.push([]);
     for (let j = 1; j < outputsSpace.length - 1; j++) {
+      let nodeId = nodeIdTracker + (nodeIdCount++);
       newNodes.push({
-        id: nodeIdTracker + (idCount++),
+        id: nodeId,
         type: "outputNode",
         position: {x: xCord, y: outputsSpace[j]}
       });
+      newNodeMatrix[newNodeMatrix.length-1].push(nodeId);
     }
 
-    setNodeIdTracker(nodeIdTracker + idCount);
+    for (let i = 0; i < newNodeMatrix.length - 1; i++) {
+      newEdgeMatrix.push([]);
+      for (let j = 0; j < newNodeMatrix[i].length; j++) {
+        newEdgeMatrix[i].push([]);
+        for (let k = 0; k < newNodeMatrix[i+1].length; k++) {
+          newEdgeMatrix[i][j].push(edgeIdTracker + (edgeIdCount++));
+        }
+      }
+    }
 
-    console.log(newNodes);
+    for (let i = 0; i < newEdgeMatrix.length; i++) {
+      for (let j = 0; j < newEdgeMatrix[i].length; j++) {
+        for (let k = 0; k < newEdgeMatrix[i][j].length; k++) {
+          newNodes = addEdge({
+            id: newEdgeMatrix[i][j][k],
+            type: 'straight',
+            source: newNodeMatrix[i][j],
+            target: newNodeMatrix[i+1][k]
+          }, newNodes);
+        }
+      }
+    }
+
+    console.log(newNodeMatrix);
+
+    setNodeMatrix(newNodeMatrix);
+    setNodeIdTracker(nodeIdTracker + nodeIdCount);
+    setEdgeIdTracker(edgeIdTracker + edgeIdCount);
     setNodeList(newNodes);
 
   }, [layerList]);
