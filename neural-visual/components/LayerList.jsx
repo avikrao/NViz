@@ -51,6 +51,10 @@ const LayerList = ({inputs, outputs, layers, onLayersSet}) => {
 
     const keyCount = useRef(0);
 
+    useEffect(() => {
+        onLayersSet([inputCount, ...layerCounts, outputCount]);
+    }, [layerCounts, outputCount, inputCount])
+
     const validateAndSetInput = (newInput) => {
 
         if (newInput === "") {
@@ -91,7 +95,6 @@ const LayerList = ({inputs, outputs, layers, onLayersSet}) => {
 
     const addNewLayer = () => {
         setLayers([...layerCounts, 1]);
-        onLayersSet([...layerCounts, 1]);
         if (layerCounts.length >= 7) {
             setCanAdd(false);
         }
@@ -99,7 +102,6 @@ const LayerList = ({inputs, outputs, layers, onLayersSet}) => {
 
     const deleteLayer = (layerIndex) => {
         setLayers(layerCounts.filter((count, index) => index != layerIndex));
-        onLayersSet(layerCounts.filter((count, index) => index != layerIndex));
         if (layerCounts.length <= 8) {
             setCanAdd(true);
         }
@@ -109,7 +111,6 @@ const LayerList = ({inputs, outputs, layers, onLayersSet}) => {
         const updatedLayers = Array.from(layerCounts);
         updatedLayers[layerIndex] = newCount;
         setLayers([...updatedLayers]);
-        onLayersSet([...updatedLayers]);
     }
 
     return (

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactFlow, { Background } from 'react-flow-renderer';
+import linspace from "exact-linspace";
 import LayerList from '../components/LayerList';
 import FlowInputNode from '../components/FlowInputNode';
 import FlowBiasNode from '../components/FlowBiasNode';
@@ -41,7 +42,10 @@ export default function Index() {
   const [learningRate, setLearningRate] = useState(0.1);
   const [trainingSpeed, setTrainingSpeed] = useState(100000);
   const [fileVisible, setFileVisibility] = useState(false);
-  const [layerList, setLayerList] = useState([2, 5, 3]);
+  const [layerList, setLayerList] = useState([3, 2, 5, 3, 1]);
+  const [nodeList, setNodeList] = useState(nodes);
+  const [nodeIdTracker, setNodeIdTracker] = useState(1);
+  const [nodeMatrix, setNodeMatrix] = useState();
 
   const worker = useRef();
   const textLearningRate = useRef();
@@ -50,6 +54,60 @@ export default function Index() {
   useEffect(() => {
     worker.current = new Worker("worker.js");
   }, []);
+
+  useEffect(() => {
+
+    console.log(layerList);
+
+    const newNodes = [];
+    const maxHeight = Math.max(...layerList) * 100;
+    let xCord = 100;
+    let idCount = 1;
+
+    const inputsSpace = linspace(0, maxHeight, layerList[0]+3);
+    for (let j = 1; j < inputsSpace.length - 2; j++) {
+      newNodes.push({
+        id: nodeIdTracker + (idCount++),
+        type: "inputNode",
+        position: {x: xCord, y: inputsSpace[j]}
+      });
+    }
+
+    newNodes.push({
+      id: nodeIdTracker + (idCount++),
+      type: "biasNode",
+      position: {x: xCord, y: inputsSpace.at(-2)}
+    });
+
+    for (let i = 1; i < layerList.length - 1; i++) {
+      xCord += 200;
+      let spaced = linspace(0, maxHeight, layerList[i]+2);
+
+      for (let j = 1; j < spaced.length - 1; j++) {
+        newNodes.push({
+          id: nodeIdTracker + (idCount++),
+          type: "layerNode",
+          position: {x: xCord, y: spaced[j]}
+        });
+      }
+    }
+
+    xCord += 200;
+    const outputsSpace = linspace(0, maxHeight, layerList[layerList.length-1]+2);
+    for (let j = 1; j < outputsSpace.length - 1; j++) {
+      newNodes.push({
+        id: nodeIdTracker + (idCount++),
+        type: "outputNode",
+        position: {x: xCord, y: outputsSpace[j]}
+      });
+    }
+
+    setNodeIdTracker(nodeIdTracker + idCount);
+
+    console.log(newNodes);
+    setNodeList(newNodes);
+
+  }, [layerList]);
 
   const setLearningRateSlider = (newRate) => {
     setLearningRate(newRate);
@@ -109,7 +167,7 @@ export default function Index() {
         <div className="w-1/2 flex flex-col">
           <p className='flex uppercase text-teal-600 text-sm mt-2'>Layers</p>
           <div className='flex flex-row h-1/2 mt-1'>
-            <LayerList className="flex flex-row" inputs={3} outputs={1} layers={layerList} onLayersSet={setLayerList}></LayerList>
+            <LayerList className="flex flex-row" inputs={layerList[0]} outputs={layerList[layerList.length-1]} layers={layerList.slice(1, layerList.length-1)} onLayersSet={setLayerList}></LayerList>
           </div>
         </div>
 
@@ -138,7 +196,7 @@ export default function Index() {
       </div>
 
       <div className="h-full">
-        <ReactFlow className="bg-gray-900" elements={nodes} nodeTypes={{inputNode: FlowInputNode, biasNode: FlowBiasNode, outputNode: FlowOutputNode, layerNode: FlowLayerNode}}>
+        <ReactFlow className="bg-gray-900" elements={nodeList} nodeTypes={{inputNode: FlowInputNode, biasNode: FlowBiasNode, outputNode: FlowOutputNode, layerNode: FlowLayerNode}}>
           <Background color="#fff"/>
         </ReactFlow>
       </div>
