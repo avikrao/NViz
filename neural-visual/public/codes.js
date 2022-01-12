@@ -10,6 +10,7 @@ export const ReturnCode = {
     InvalidOutputs: 8,
     StartSuccess: 9,
     StoppedTraining: 10,
+    TrainingUpdate: 11,
 }
 
 export const MessageCode = {

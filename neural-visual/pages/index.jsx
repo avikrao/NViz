@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactFlow, { addEdge, Background } from 'react-flow-renderer';
 import linspace from "exact-linspace";
+import chroma from "chroma-js";
 import LayerList from '../components/LayerList';
 import FlowInputNode from '../components/FlowInputNode';
 import FlowBiasNode from '../components/FlowBiasNode';
@@ -11,17 +12,23 @@ import { MessageCode, ReturnCode } from '../public/codes';
 const learningRateLimits = [0.01, 0.5];
 const trainingSpeedLimits = [1, 100000];
 
+const colorScale = chroma.scale(["#f00", "#0f0"]);
+
 export default function Index() {
 
   const [learningRate, setLearningRate] = useState(0.1);
   const [trainingSpeed, setTrainingSpeed] = useState(100000);
   const [fileVisible, setFileVisibility] = useState(false);
   const [layerList, setLayerList] = useState([3, 2, 5, 3, 1]);
-  const [nodeList, setNodeList] = useState();
-  const [nodeIdTracker, setNodeIdTracker] = useState(1);
-  const [edgeIdTracker, setEdgeIdTracker] = useState(1);
+  const [elementList, setElementList] = useState();
+  const nodeIdTracker = useRef(1);
+  const edgeIdTracker = useRef(1);
   const [nodeMatrix, setNodeMatrix] = useState();
-  const [edgeMatrix, setEdgeMatrix] = useState();
+
+  const nodeList = useRef();
+  const edgeMatrix = useRef();
+  const edgeList = useRef();
+
   const [trainingState, setTrainingState] = useState(false);
 
   const worker = useRef(null);
@@ -34,6 +41,12 @@ export default function Index() {
       switch(message.data.code) {
         case ReturnCode.ModuleReady :
           worker.current.postMessage({code: MessageCode.LayersSet, layers: layerList});
+          
+          worker.current.postMessage({
+            code: MessageCode.ValuesUpdate, 
+            learningRate: learningRate, 
+            trainingSpeed: trainingSpeed
+          });
           return;
         case ReturnCode.StartSuccess :
           setTrainingState(true);
@@ -41,6 +54,12 @@ export default function Index() {
         case ReturnCode.StoppedTraining :
           setTrainingState(false);
           return;
+        case ReturnCode.TrainingUpdate :
+          if (message.data.weights) {
+            updateWeights(message.data.layers, message.data.weights);
+            // console.log(message.data.weights);
+            // console.log(edgeMatrix.current);
+          }
       }
     });
   }, []);
@@ -48,8 +67,10 @@ export default function Index() {
   useEffect(() => {
 
     const newNodes = [];
+    const newEdges = [];
     const newNodeMatrix = [[]];
     const newEdgeMatrix = [];
+    let newElements = [];
     let maxHeight = Math.max(...layerList) * 100;
     maxHeight = Math.max(((layerList[0] + 1) * 100), maxHeight); // account for bias
     let xCord = 100;
@@ -58,35 +79,35 @@ export default function Index() {
 
     const inputsSpace = linspace(0, maxHeight, layerList[0]+3);
     for (let j = 1; j < inputsSpace.length - 2; j++) {
-      let nodeId = nodeIdTracker + (nodeIdCount++)
+      let nodeId = nodeIdTracker.current++;
       newNodes.push({
-        id: nodeId,
+        id: nodeId.toString(),
         type: "inputNode",
         position: {x: xCord, y: inputsSpace[j]}
       });
-      newNodeMatrix[0].push(nodeId);
+      newNodeMatrix[0].push(nodeId.toString());
     }
 
-    let biasNodeId = nodeIdTracker + (nodeIdCount++)
+    let biasNodeId = nodeIdTracker.current++;
     newNodes.push({
-      id: biasNodeId,
+      id: biasNodeId.toString(),
       type: "biasNode",
       position: {x: xCord, y: inputsSpace[inputsSpace.length-2]}
     });
-    newNodeMatrix[0].push(biasNodeId);
+    newNodeMatrix[0].push(biasNodeId.toString());
 
     for (let i = 1; i < layerList.length - 1; i++) {
       xCord += 200;
       let spaced = linspace(0, maxHeight, layerList[i]+2);
       newNodeMatrix.push([]);
       for (let j = 1; j < spaced.length - 1; j++) {
-        let nodeId = nodeIdTracker + (nodeIdCount++);
+        let nodeId = nodeIdTracker.current++;
         newNodes.push({
-          id: nodeId,
+          id: nodeId.toString(),
           type: "layerNode",
           position: {x: xCord, y: spaced[j]}
         });
-        newNodeMatrix[newNodeMatrix.length-1].push(nodeId);
+        newNodeMatrix[newNodeMatrix.length-1].push(nodeId.toString());
       }
     }
 
@@ -94,21 +115,23 @@ export default function Index() {
     const outputsSpace = linspace(0, maxHeight, layerList[layerList.length-1]+2);
     newNodeMatrix.push([]);
     for (let j = 1; j < outputsSpace.length - 1; j++) {
-      let nodeId = nodeIdTracker + (nodeIdCount++);
+      let nodeId = nodeIdTracker.current++;
       newNodes.push({
-        id: nodeId,
+        id: nodeId.toString(),
         type: "outputNode",
         position: {x: xCord, y: outputsSpace[j]}
       });
-      newNodeMatrix[newNodeMatrix.length-1].push(nodeId);
+      newNodeMatrix[newNodeMatrix.length-1].push(nodeId.toString());
     }
+
+    newElements = newElements.concat(newNodes);
 
     for (let i = 0; i < newNodeMatrix.length - 1; i++) {
       newEdgeMatrix.push([]);
-      for (let j = 0; j < newNodeMatrix[i].length; j++) {
+      for (let j = 0; j < newNodeMatrix[i+1].length; j++) {
         newEdgeMatrix[i].push([]);
-        for (let k = 0; k < newNodeMatrix[i+1].length; k++) {
-          newEdgeMatrix[i][j].push(edgeIdTracker + (edgeIdCount++));
+        for (let k = 0; k < newNodeMatrix[i].length; k++) {
+          newEdgeMatrix[i][j].push(edgeIdTracker.current++);
         }
       }
     }
@@ -116,25 +139,30 @@ export default function Index() {
     for (let i = 0; i < newEdgeMatrix.length; i++) {
       for (let j = 0; j < newEdgeMatrix[i].length; j++) {
         for (let k = 0; k < newEdgeMatrix[i][j].length; k++) {
-          newNodes = addEdge({
-            id: newEdgeMatrix[i][j][k],
+          newEdges = addEdge({
+            id: newEdgeMatrix[i][j][k].toString(),
             type: 'straight',
-            source: newNodeMatrix[i][j],
-            target: newNodeMatrix[i+1][k]
-          }, newNodes);
+            source: newNodeMatrix[i][k],
+            target: newNodeMatrix[i+1][j]
+          }, newEdges);
         }
       }
     }
 
+    newElements = newElements.concat(newEdges);
+
     worker.current.postMessage({code: MessageCode.LayersSet, layers: layerList});
 
     setNodeMatrix(newNodeMatrix);
-    setEdgeMatrix(newEdgeMatrix);
-    setNodeIdTracker(nodeIdTracker + nodeIdCount);
-    setEdgeIdTracker(edgeIdTracker + edgeIdCount);
-    setNodeList(newNodes);
+    edgeMatrix.current = newEdgeMatrix;
 
-  }, [layerList]);
+    nodeList.current = newNodes;
+    edgeList.current = newEdges;
+    setElementList(newElements);
+
+    console.log(newElements);
+
+  }, [layerList, fileVisible]);
 
   useEffect(() => {
     worker.current.postMessage({
@@ -143,6 +171,41 @@ export default function Index() {
       trainingSpeed: trainingSpeed,
     });
   }, [learningRate, trainingSpeed]);
+
+  const updateWeights = (layers, weights) => {
+
+    const oldEdges = edgeMatrix.current;
+    const newEdges = [];
+    const flattenedWeights = weights.flat(Infinity),
+      maxWeight = Math.max(...flattenedWeights),
+      minWeight = Math.min(...flattenedWeights),
+      scale = maxWeight - minWeight;
+
+    let newElements = [...nodeList.current];
+    
+    let edgeCounter = 0;
+
+    for (let i = 0; i < weights.length; i++) {
+      for (let j = 0; j < weights[i].length; j++) {
+        for (let k = 0; k < weights[i][j].length; k++) {
+          newEdges = addEdge({
+            id: (edgeIdTracker.current++).toString(),
+            type: 'straight',
+            source: edgeList.current[edgeCounter].source,
+            target: edgeList.current[edgeCounter++].target,
+            style: {
+              stroke: colorScale((weights[i][j][k] - minWeight)/(scale)).toString(),
+            }
+          }, newEdges)
+        }
+      }
+    }
+
+    newElements = newElements.concat(newEdges);
+    edgeList.current = newEdges;
+
+    setElementList([...nodeList.current, ...newEdges]);
+  }
 
   const onFileUpload = async (fileList) => {
     setFileVisibility(false);
@@ -190,6 +253,7 @@ export default function Index() {
   }
 
   const stopTraining = () => {
+    console.log(elementList);
     worker.current.postMessage({code: MessageCode.StopTraining});
   }
 
@@ -296,10 +360,11 @@ export default function Index() {
 
       <div className="h-full">
         <ReactFlow 
-          className="bg-gray-900" 
-          elements={nodeList} 
+          className="flex bg-gray-900 relative" 
+          elements={elementList} 
           nodeTypes={{inputNode: FlowInputNode, biasNode: FlowBiasNode, outputNode: FlowOutputNode, layerNode: FlowLayerNode}}>
           <Background color="#fff"/>
+          {/* <div className='absolute top-0 right-0 w-1/6 h-1/6 border-2 border-teal-900 border-t-0 bg-gray-900'></div> */}
         </ReactFlow>
       </div>
 

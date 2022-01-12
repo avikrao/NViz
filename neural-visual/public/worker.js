@@ -12,6 +12,27 @@ Module.onRuntimeInitialized = async () => {
     let trainingSpeed = 1;
     let inputSize = 0; 
     let outputSize = 0;
+    let completedIterations = 0;
+    let weights = [];
+
+    function getWeights() {
+
+        const newWeights = [];
+
+        for (let layer = 0; layer < layerCounts.length-1; layer++) {
+            let layerVector = nn.getLayer(layer);
+            newWeights.push([]);
+            for (let node = 0; node < layerVector.size(); node++) {
+                let nodeVector = layerVector.get(node);
+                newWeights[newWeights.length-1].push([]);
+                for (let weight = 0; weight < nodeVector.size(); weight++) {
+                    newWeights[newWeights.length - 1][newWeights[newWeights.length - 1].length - 1].push(nodeVector.get(weight));
+                }
+            }
+        }
+
+        return newWeights;
+    }
 
     onmessage = async (message) => {
         const payload = message.data;
@@ -19,6 +40,8 @@ Module.onRuntimeInitialized = async () => {
         switch (message.data.code) {
             case MessageCode.StopTraining :
                 // PLACEHOLDER FOR STOP TRAINING CODE
+                nn.stopTraining();
+                console.log(completedIterations);
                 postMessage({code: ReturnCode.StoppedTraining});
                 break;
             case MessageCode.StartTraining :
@@ -28,14 +51,18 @@ Module.onRuntimeInitialized = async () => {
                 } else if (!layerCounts.length) {
                     postMessage({code: ReturnCode.InvalidLayers});
                 } else if (layerCounts[0] != inputSize) {
-                    
                     postMessage({code: InvalidInputs});
                 } else if (layerCounts[layerCounts.length-1] != outputSize) {
-                    
                     postMessage({code: ReturnCode.InvalidOutputs});
                 } else {
                     // PLACEHOLDER FOR START TRAINING CODE
                     postMessage({code: ReturnCode.StartSuccess});
+                    do {
+                        completedIterations = nn.train(trainingSpeed);
+                        weights = getWeights();
+                        postMessage({code: ReturnCode.TrainingUpdate, weights: weights, layers: layerCounts});
+                        await new Promise(resolve => setTimeout(resolve));
+                    } while (nn.getRunStatus());
                 }
                 return;
 
@@ -70,18 +97,19 @@ Module.onRuntimeInitialized = async () => {
                 }
 
                 for (const jsonPair of jsonPairs) {
-                    nn.addTrainingPair(jsonPair["in"], jsonPair["out"]);
+                    nn.addTrainingPair([...jsonPair["in"], 1.0], jsonPair["out"]);
                 }
 
-                inputSize = inputLength;
+                inputSize = inputLength + 1;
                 outputSize = outputLength;
 
                 postMessage({code: ReturnCode.JSONSuccess});
                 return;
             
             case MessageCode.LayersSet :
-                console.log("received");
-                layerCounts = payload.layers ? payload.layers : layerCounts;
+                if (payload.layers) {
+                    layerCounts = [payload.layers[0] + 1, ...payload.layers.slice(1)];
+                }
                 nn.setLayerCounts(layerCounts);
                 return;
             

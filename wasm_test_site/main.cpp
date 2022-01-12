@@ -258,6 +258,14 @@ class NeuralNetwork {
             _training_switch = false;
             _print_weights();
         }
+
+        void log_weights() {
+            _print_weights();
+        }
+
+        std::vector<std::vector<float>> get_layer(int index) {
+            return _layers.at(index);
+        }
 };
 
 void sleep_and_print() {
@@ -290,7 +298,11 @@ EMSCRIPTEN_BINDINGS(neural_visual) {
         .function("addTrainingPair", &NeuralNetwork::add_training_pair)
         .function("train", &NeuralNetwork::train)
         .function("stopTraining", &NeuralNetwork::stop_training)
-        .function("getRunStatus", &NeuralNetwork::get_run_status);
+        .function("getRunStatus", &NeuralNetwork::get_run_status)
+        .function("logWeights", &NeuralNetwork::log_weights)
+        .function("getLayer", &NeuralNetwork::get_layer);
     emscripten::function("sleepAndPrint", &sleep_and_print);
+    emscripten::register_vector<float>("WeightsVector");
+    emscripten::register_vector<std::vector<float>>("LayerVector");
 }
 

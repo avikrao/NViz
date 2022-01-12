@@ -173,9 +173,13 @@ LAYER_COUNTS = [3, 5, 4, 1, 1];
                 }
                 this.backpropagate(this.trainingPairList[this.nextTrainingPair].inputs, this.trainingPairList[this.nextTrainingPair].outputs[0]);
             }
+
+            return this.completedIterations;
         }
 
     }
+
+    let completedIterations = 0;
 
     const start = document.querySelector("#start");
     const stop = document.querySelector("#stop");
@@ -194,8 +198,15 @@ LAYER_COUNTS = [3, 5, 4, 1, 1];
 
     start.addEventListener("click", async () => {
         console.log("Beginning training.");
+
+        setTimeout(() => {
+            console.log("Stopped training.");
+            nn.trainingSwitch = false;
+            nn.printWeights();
+            console.log(`Completed iterations: ${completedIterations}`);
+        }, 15000);
         do {
-            nn.train(100000);
+            completedIterations = nn.train(100000);
             await new Promise((resolve) => setTimeout(resolve));
         } while (nn.trainingSwitch);
     });
@@ -204,7 +215,7 @@ LAYER_COUNTS = [3, 5, 4, 1, 1];
         console.log("Stopped training.");
         nn.trainingSwitch = false;
         nn.printWeights();
-        console.log(`Completed iterations: ${nn.completedIterations}`);
+        console.log(`Completed iterations: ${completedIterations}`);
     });
 
 })();
