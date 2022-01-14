@@ -73,7 +73,8 @@ Module.onRuntimeInitialized = async () => {
                     //     }
                     // }, 60000);
                 do {
-                    completedIterations = NeuralNetwork.train(500000);
+                    completedIterations = NeuralNetwork.train(100000);
+                    console.log(getWeights());
                     // console.log(getWeights());
                     await new Promise((resolve) => setTimeout(resolve));
                 } while (NeuralNetwork.getRunStatus());

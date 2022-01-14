@@ -1,4 +1,4 @@
-self.importScripts("main.js");
+self.importScripts("newmain.js");
 self.importScripts("workercodes.js");
 
 Module.onRuntimeInitialized = async () => {
@@ -12,13 +12,11 @@ Module.onRuntimeInitialized = async () => {
     let trainingSpeed = 1;
     let inputSize = 0; 
     let outputSize = 0;
-    let completedIterations = 0;
+    let epochs = 0;
     let weights = [];
 
     function getWeights() {
-
         const newWeights = [];
-
         for (let layer = 0; layer < layerCounts.length-1; layer++) {
             let layerVector = nn.getLayer(layer);
             newWeights.push([]);
@@ -30,7 +28,6 @@ Module.onRuntimeInitialized = async () => {
                 }
             }
         }
-
         return newWeights;
     }
 
@@ -41,26 +38,33 @@ Module.onRuntimeInitialized = async () => {
             case MessageCode.StopTraining :
                 // PLACEHOLDER FOR STOP TRAINING CODE
                 nn.stopTraining();
-                console.log(completedIterations);
-                postMessage({code: ReturnCode.StoppedTraining});
+                weights = getWeights();
+                postMessage({code: ReturnCode.StoppedTraining, weights: weights, epochs: epochs});
                 break;
             case MessageCode.StartTraining :
 
                 if (!(inputSize && outputSize)) {
                     postMessage({code: ReturnCode.MissingJSON});
+                    console.log("error1");
                 } else if (!layerCounts.length) {
                     postMessage({code: ReturnCode.InvalidLayers});
+                    console.log("error2");
                 } else if (layerCounts[0] != inputSize) {
-                    postMessage({code: InvalidInputs});
+                    console.log(layerCounts)
+                    console.log(inputSize);
+                    postMessage({code: ReturnCode.InvalidInputs});
+                    console.log("error3");
                 } else if (layerCounts[layerCounts.length-1] != outputSize) {
                     postMessage({code: ReturnCode.InvalidOutputs});
+                    console.log(outputSize);
+                    console.log(layerCounts[layerCounts.length-1])
                 } else {
                     // PLACEHOLDER FOR START TRAINING CODE
                     postMessage({code: ReturnCode.StartSuccess});
                     do {
-                        completedIterations = nn.train(trainingSpeed);
+                        epochs = nn.train(trainingSpeed);
                         weights = getWeights();
-                        postMessage({code: ReturnCode.TrainingUpdate, weights: weights, layers: layerCounts});
+                        postMessage({code: ReturnCode.TrainingUpdate, weights: weights});
                         await new Promise(resolve => setTimeout(resolve));
                     } while (nn.getRunStatus());
                 }
@@ -107,7 +111,9 @@ Module.onRuntimeInitialized = async () => {
                 return;
             
             case MessageCode.LayersSet :
+                
                 if (payload.layers) {
+                    console.log(payload.layers)
                     layerCounts = [payload.layers[0] + 1, ...payload.layers.slice(1)];
                 }
                 nn.setLayerCounts(layerCounts);

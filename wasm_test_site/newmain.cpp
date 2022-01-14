@@ -19,7 +19,7 @@ private:
             Neuron(int num_inputs) {
                 delta = 0.0;
                 output = 0.0;
-                for (int i = 0; i < num_inputs + 1; i++) {
+                for (int i = 0; i < num_inputs; i++) {
                     weights.push_back((double)rand() / RAND_MAX);
                 }
             }
@@ -43,7 +43,7 @@ private:
             }
 
             double fire(std::vector<double> &inputs) {
-                output = transfer(dot(inputs, std::vector<double>(weights.begin(), weights.end()-1)));
+                output = transfer(dot(inputs, weights));
                 return output;
             }
 
@@ -60,7 +60,6 @@ private:
             }
         }
 
-        
     };
 
     class TrainingPair {
@@ -192,7 +191,6 @@ public:
                 for (size_t j = 0; j < real_inputs.size(); j++) {
                     neuron.weights[j] += learning_rate * neuron.delta * real_inputs[j];
                 }
-                neuron.weights.back() += learning_rate * neuron.delta;
             }
         }
     }

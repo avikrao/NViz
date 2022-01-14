@@ -21,13 +21,9 @@ export default function Index() {
   const [fileVisible, setFileVisibility] = useState(false);
   const [layerList, setLayerList] = useState([3, 2, 5, 3, 1]);
   const [elementList, setElementList] = useState();
-  const nodeIdTracker = useRef(1);
-  const edgeIdTracker = useRef(1);
-  const [nodeMatrix, setNodeMatrix] = useState();
 
   const nodeList = useRef();
-  const edgeMatrix = useRef();
-  const edgeList = useRef();
+  const nodeMatrix = useRef();
 
   const [trainingState, setTrainingState] = useState(false);
 
@@ -52,117 +48,104 @@ export default function Index() {
           setTrainingState(true);
           return;
         case ReturnCode.StoppedTraining :
+          if (message.data.weights) {
+            updateWeights(message.data.weights, false);
+          }
           setTrainingState(false);
           return;
         case ReturnCode.TrainingUpdate :
           if (message.data.weights) {
-            updateWeights(message.data.layers, message.data.weights);
-            // console.log(message.data.weights);
-            // console.log(edgeMatrix.current);
+            updateWeights(message.data.weights, true);
           }
       }
     });
   }, []);
 
   useEffect(() => {
+    if (layerList.includes(0)) { return; }
+
+    const layersWithBias = [layerList[0] + 1, ...layerList.slice(1)];
+    const maxLayer = Math.max(...layersWithBias);
 
     const newNodes = [];
-    const newEdges = [];
-    const newNodeMatrix = [[]];
-    const newEdgeMatrix = [];
-    let newElements = [];
-    let maxHeight = Math.max(...layerList) * 100;
-    maxHeight = Math.max(((layerList[0] + 1) * 100), maxHeight); // account for bias
+    const newNodeMatrix = [];
+    let newEdges = [];
+
     let xCord = 100;
-    let nodeIdCount = 0;
-    let edgeIdCount = 0;
-
-    const inputsSpace = linspace(0, maxHeight, layerList[0]+3);
-    for (let j = 1; j < inputsSpace.length - 2; j++) {
-      let nodeId = nodeIdTracker.current++;
-      newNodes.push({
-        id: nodeId.toString(),
-        type: "inputNode",
-        position: {x: xCord, y: inputsSpace[j]}
-      });
-      newNodeMatrix[0].push(nodeId.toString());
-    }
-
-    let biasNodeId = nodeIdTracker.current++;
-    newNodes.push({
-      id: biasNodeId.toString(),
-      type: "biasNode",
-      position: {x: xCord, y: inputsSpace[inputsSpace.length-2]}
-    });
-    newNodeMatrix[0].push(biasNodeId.toString());
-
-    for (let i = 1; i < layerList.length - 1; i++) {
-      xCord += 200;
-      let spaced = linspace(0, maxHeight, layerList[i]+2);
+    let nodeId = 1;
+    for (const [layerIndex, layerCount] of layersWithBias.entries()) {
       newNodeMatrix.push([]);
-      for (let j = 1; j < spaced.length - 1; j++) {
-        let nodeId = nodeIdTracker.current++;
+      if (layerIndex == 0) {
+        const space = linspace(0, (maxLayer*100), layerCount+2);
+        for (let i = 1; i < space.length - 2; i++) {
+          newNodes.push({
+            id: nodeId.toString(),
+            type: "inputNode",
+            draggable: false,
+            position: {x: xCord, y: space[i]}
+          });
+          newNodeMatrix[newNodeMatrix.length - 1].push(nodeId++);
+        }
+
         newNodes.push({
           id: nodeId.toString(),
-          type: "layerNode",
-          position: {x: xCord, y: spaced[j]}
-        });
-        newNodeMatrix[newNodeMatrix.length-1].push(nodeId.toString());
+          type: "biasNode",
+          draggable: false,
+          position: {x: xCord, y: space[space.length-2]}
+        })
+        newNodeMatrix[newNodeMatrix.length - 1].push(nodeId++);
+        xCord += 200;
+      } else if (layerIndex != layerList.length-1) {
+
+        const space = linspace(0, (maxLayer*100), layerCount+2);
+        for (let i = 1; i < space.length - 1; i++) {
+          newNodes.push({
+            id: nodeId.toString(),
+            type: "layerNode",
+            draggable: false,
+            position: {x: xCord, y: space[i]}
+          });
+          newNodeMatrix[newNodeMatrix.length - 1].push(nodeId++);
+        }
+
+        xCord += 200;
+
+      } else {
+        const space = linspace(0, maxLayer*100, layerCount+2);
+        for (let i = 1; i < space.length - 1; i++) {
+          newNodes.push({
+            id: nodeId.toString(),
+            type: "outputNode",
+            draggable: false,
+            position: {x: xCord, y: space[i]}
+          });
+          newNodeMatrix[newNodeMatrix.length - 1].push(nodeId++);
+        }
       }
     }
 
-    xCord += 200;
-    const outputsSpace = linspace(0, maxHeight, layerList[layerList.length-1]+2);
-    newNodeMatrix.push([]);
-    for (let j = 1; j < outputsSpace.length - 1; j++) {
-      let nodeId = nodeIdTracker.current++;
-      newNodes.push({
-        id: nodeId.toString(),
-        type: "outputNode",
-        position: {x: xCord, y: outputsSpace[j]}
-      });
-      newNodeMatrix[newNodeMatrix.length-1].push(nodeId.toString());
-    }
-
-    newElements = newElements.concat(newNodes);
-
+    let edgeCount = 0;
     for (let i = 0; i < newNodeMatrix.length - 1; i++) {
-      newEdgeMatrix.push([]);
-      for (let j = 0; j < newNodeMatrix[i+1].length; j++) {
-        newEdgeMatrix[i].push([]);
-        for (let k = 0; k < newNodeMatrix[i].length; k++) {
-          newEdgeMatrix[i][j].push(edgeIdTracker.current++);
-        }
-      }
-    }
-
-    for (let i = 0; i < newEdgeMatrix.length; i++) {
-      for (let j = 0; j < newEdgeMatrix[i].length; j++) {
-        for (let k = 0; k < newEdgeMatrix[i][j].length; k++) {
+      for (let j = 0; j < newNodeMatrix[i].length; j++) {
+        for (let k = 0; k < newNodeMatrix[i+1].length; k++) {
           newEdges = addEdge({
-            id: newEdgeMatrix[i][j][k].toString(),
+            id: edgeCount.toString(),
             type: 'straight',
-            source: newNodeMatrix[i][k],
-            target: newNodeMatrix[i+1][j]
-          }, newEdges);
+            // animated: true,
+            source: newNodeMatrix[i][j].toString(),
+            target: newNodeMatrix[i+1][k].toString(),
+          },newEdges);
+          edgeCount++;
         }
       }
     }
 
-    newElements = newElements.concat(newEdges);
-
-    worker.current.postMessage({code: MessageCode.LayersSet, layers: layerList});
-
-    setNodeMatrix(newNodeMatrix);
-    edgeMatrix.current = newEdgeMatrix;
-
+    nodeMatrix.current = newNodeMatrix;
     nodeList.current = newNodes;
-    edgeList.current = newEdges;
-    setElementList(newElements);
+    setElementList([...newNodes, ...newEdges]);
+    worker.current.postMessage({code: MessageCode.LayersSet, layers: layerList});
+  }, [layerList]);
 
-    console.log(newElements);
-
-  }, [layerList, fileVisible]);
 
   useEffect(() => {
     worker.current.postMessage({
@@ -172,38 +155,37 @@ export default function Index() {
     });
   }, [learningRate, trainingSpeed]);
 
-  const updateWeights = (layers, weights) => {
+  const updateWeights = (weights, running) => {
 
-    const oldEdges = edgeMatrix.current;
-    const newEdges = [];
-    const flattenedWeights = weights.flat(Infinity),
-      maxWeight = Math.max(...flattenedWeights),
-      minWeight = Math.min(...flattenedWeights),
+    console.log(weights);
+
+    const flattenedweights = weights.flat(Infinity),
+      maxWeight = Math.max(...flattenedweights),
+      minWeight = Math.min(...flattenedweights),
       scale = maxWeight - minWeight;
 
-    let newElements = [...nodeList.current];
-    
-    let edgeCounter = 0;
+    const newEdges = [];
+    let edgeId = 0;
 
     for (let i = 0; i < weights.length; i++) {
       for (let j = 0; j < weights[i].length; j++) {
         for (let k = 0; k < weights[i][j].length; k++) {
           newEdges = addEdge({
-            id: (edgeIdTracker.current++).toString(),
-            type: 'straight',
-            source: edgeList.current[edgeCounter].source,
-            target: edgeList.current[edgeCounter++].target,
+            id: edgeId.toString(),
+            type: "straight",
+            animated: running, 
+            source: nodeMatrix.current[i][k].toString(),
+            target: nodeMatrix.current[i+1][j].toString(),
             style: {
               stroke: colorScale((weights[i][j][k] - minWeight)/(scale)).toString(),
             }
-          }, newEdges)
+          }, newEdges);
+          edgeId++;
         }
       }
     }
 
-    newElements = newElements.concat(newEdges);
-    edgeList.current = newEdges;
-
+    console.log([...nodeList.current, ...newEdges]);
     setElementList([...nodeList.current, ...newEdges]);
   }
 
