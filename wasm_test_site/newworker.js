@@ -1,7 +1,7 @@
-self.importScripts("main.js");
+self.importScripts("newmain.js");
 
 const LEARNING_RATE = 0.08;
-const LAYER_COUNTS = [5, 4, 1];
+const LAYER_COUNTS = [4, 5, 4, 3];
 
 
 Module.onRuntimeInitialized = async () => {
@@ -52,12 +52,29 @@ Module.onRuntimeInitialized = async () => {
                 NeuralNetwork.stopTraining();
                 console.log(`Completed iterations: ${completedIterations}`);
                 console.log(getWeights());
+                for (let i = 0; i < 10; i++) {
+                    let test_inp = [(Math.random() * 3) - 1.5, (Math.random() * 3) - 1.5, 1.0];
+                    console.log(test_inp);
+                    let result = NeuralNetwork.predict(test_inp);
+                }
                 break;
             case 1 :
                 console.log("Beginning training.");
+                    // setTimeout(() => {
+                    //     console.log("Stopped training.");
+                    //     NeuralNetwork.stopTraining();
+                    //     // nn.printWeights();
+                    //     console.log(getWeights());
+                    //     console.log(`Completed iterations: ${completedIterations}`);
+                    //     for (let i = 0; i < 100; i++) {
+                    //         let test_inp = [(Math.random() * 3) - 1.5, (Math.random() * 3) - 1.5, 1.0];
+                    //         console.log(test_inp);
+                    //         let result = NeuralNetwork.predict(test_inp);
+                    //     }
+                    // }, 60000);
                 do {
-                    completedIterations = NeuralNetwork.train(100000);
-                    getWeights();
+                    completedIterations = NeuralNetwork.train(500000);
+                    // console.log(getWeights());
                     await new Promise((resolve) => setTimeout(resolve));
                 } while (NeuralNetwork.getRunStatus());
                 break;

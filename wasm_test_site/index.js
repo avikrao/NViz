@@ -1,7 +1,4 @@
-const LEARNING_RATE = 0.08;
-const LAYER_COUNTS = [5, 4, 1];
-
-var worker = new Worker("worker.js");
+var worker = new Worker("newworker.js");
 
 const start = document.querySelector("#start");
 const stop = document.querySelector("#stop");

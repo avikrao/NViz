@@ -149,7 +149,7 @@ class NeuralNetwork {
             return x*(1.0 - x);
         }
 
-        std::vector<float> _backpropagate(const std::vector<float> &inputs, float target) {
+        std::vector<float> _backpropagate(const std::vector<float> &inputs, const std::vector<float> target) {
 
             std::vector<std::vector<float>> z;
             std::vector<std::vector<float>> a;
@@ -184,8 +184,15 @@ class NeuralNetwork {
             outputList = _hadamard(outputList, _layers.back().front());
             a.pop_back();
 
-            _gradients.back().front().front() = target - outputList.front();
-            _change_by.back().front().front() = _gradients.back().front().front() * z.back().front();
+            for (int j = 0; j < target.size(); j++) {
+                for (int i = 0; i < outputList.size(); i++) {
+                    _gradients.back().at(j).at(i) = target.at(j) - outputList.at(i);
+                    _change_by.back().at(j).at(i) = _gradients.back().at(j).at(i) * z.back().at(j);
+                }
+            }
+
+            // _gradients.back().front().front() = target - outputList.front();
+            // _change_by.back().front().front() = _gradients.back().front().front() * z.back().front();
 
             for (int layer = -2; layer > -_layer_counts.size(); layer--) {
                 for (int out = 0; out < _gradients.at(_gradients.size() + layer).size(); out++) {
@@ -248,7 +255,7 @@ class NeuralNetwork {
                 if (++_next_training_pair >= _training_pair_list.size()) {
                     _next_training_pair = 0;
                 }
-                _backpropagate(_training_pair_list.at(_next_training_pair).inputs(), _training_pair_list.at(_next_training_pair).output_entry(0));
+                _backpropagate(_training_pair_list.at(_next_training_pair).inputs(), _training_pair_list.at(_next_training_pair).outputs());
             }
 
             return _completed_iterations;
@@ -305,4 +312,3 @@ EMSCRIPTEN_BINDINGS(neural_visual) {
     emscripten::register_vector<float>("WeightsVector");
     emscripten::register_vector<std::vector<float>>("LayerVector");
 }
-
