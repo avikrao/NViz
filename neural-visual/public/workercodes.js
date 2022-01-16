@@ -16,7 +16,7 @@ const ReturnCode = {
 const MessageCode = {
     StopTraining: 0,
     StartTraining: 1,
-    FileUpload: 2,
+    TrainingUpload: 2,
     LayersSet: 3,
     ValuesUpdate: 4,
 }

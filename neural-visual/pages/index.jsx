@@ -7,6 +7,7 @@ import FlowInputNode from '../components/FlowInputNode';
 import FlowBiasNode from '../components/FlowBiasNode';
 import FlowOutputNode from '../components/FlowOutputNode';
 import FlowLayerNode from '../components/FlowLayerNode';
+import ErrorModal from '../components/ErrorModal';
 import { MessageCode, ReturnCode } from '../public/codes';
 
 const learningRateLimits = [0.01, 0.5];
@@ -18,11 +19,12 @@ export default function Index() {
 
   const [learningRate, setLearningRate] = useState(0.1);
   const [trainingSpeed, setTrainingSpeed] = useState(100000);
-  const [fileVisible, setFileVisibility] = useState(false);
   const [layerList, setLayerList] = useState([3, 2, 5, 3, 1]);
   const [elementList, setElementList] = useState();
   const [epochs, setEpochs] = useState(0);
   const [error, setError] = useState(0.0);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalCode, setModalCode] = useState();
 
   const nodeList = useRef();
   const nodeMatrix = useRef();
@@ -61,6 +63,13 @@ export default function Index() {
             setError(message.data.error);
             updateWeights(message.data.weights, true);
           }
+          return;
+        case ReturnCode.JSONSuccess :
+          return;
+        default :
+          setModalCode(message.data.code);
+          setModalOpen(true);
+          return;
       }
     });
   }, []);
@@ -194,14 +203,42 @@ export default function Index() {
     setElementList([...nodeList.current, ...newEdges]);
   }
 
-  const onFileUpload = async (fileList) => {
-    setFileVisibility(false);
+  const onTrainingUpload = async (fileList) => {
     const latestFile = fileList[fileList.length-1];
+
+    if (latestFile.type !== "application/json") {
+      console.log(latestFile.type);
+      return;
+    }
+
     const reader = new FileReader();
     reader.readAsText(latestFile);
     reader.addEventListener("load", async (event) => {
       const dataAsJson = JSON.parse(event.target.result);
-      worker.current.postMessage({code: MessageCode.FileUpload, file: dataAsJson});
+      if (!dataAsJson?.data?.length) {
+        console.log(dataAsJson);
+        return;
+      }
+      worker.current.postMessage({code: MessageCode.TrainingUpload, file: dataAsJson});
+    });
+  }
+
+  const onInputUpload = async (fileList) => {
+    const uploadedFile = fileList[0];
+    if (uploadedFile.type === "application/json") {
+      // error!
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.readAsText(latestFile);
+    reader.addEventListener("load", async (event) => {
+      const dataAsJson = JSON.parse(event.target.result);
+      if (!dataAsJson?.inputs?.length) {
+        // error!
+        return;
+      }
+      worker.current.postMessage({code: MessageCode.InputUpload, file: dataAsJson});
     });
   }
 
@@ -244,10 +281,14 @@ export default function Index() {
     worker.current.postMessage({code: MessageCode.StopTraining});
   }
 
+  const onModalClose = () => {
+    setModalOpen(false);
+  }
+
   return (
 
     <div className='site flex flex-col h-screen'>
-
+      <ErrorModal open={modalOpen} onClose={onModalClose} error={modalCode}></ErrorModal>
       <div className='flex flex-row w-full bg-gray-900 h-20 items-center'>
         <div className='ml-6 mr-6'>
           <a href="#" className='text-white text-2xl'>Neural Visualisation</a>
@@ -268,7 +309,7 @@ export default function Index() {
           <label className='uppercase text-teal-600 text-sm ml-6 mt-2 h-1/6'>Training Data</label>
           <input type="file" 
             className={`ml-6 my-2 h-full text-white hover:cursor-pointer`} 
-            onChange={event => onFileUpload(event.target.files)}>
+            onChange={event => onTrainingUpload(event.target.files)}>
           </input>
         </div>
 
@@ -367,7 +408,10 @@ export default function Index() {
           <div className='flex flex-col h-full text-sm break-all'>
             <div className='flex flex-col mt-4 ml-4 text-white h-1/5'>
               <p className='mb-2 uppercase text-teal-600'>Input File</p>
-              <input type="file" className='h-full hover:cursor-pointer'/>
+              <input 
+                type="file" 
+                className='h-full hover:cursor-pointer'
+                onChange={event => onInputUpload(event.target.files)}/>
             </div>
             <div className='flex w-full h-1/6 items-center justify-center'>
               {!trainingState && 

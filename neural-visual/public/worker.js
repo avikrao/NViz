@@ -45,6 +45,8 @@ Module.onRuntimeInitialized = async () => {
             case MessageCode.StartTraining :
 
                 if (!(inputSize && outputSize)) {
+                    console.log(inputSize);
+                    console.log(outputSize);
                     postMessage({code: ReturnCode.MissingJSON});
                     console.log("error1");
                 } else if (!layerCounts.length) {
@@ -72,7 +74,7 @@ Module.onRuntimeInitialized = async () => {
                 }
                 return;
 
-            case MessageCode.FileUpload :
+            case MessageCode.TrainingUpload :
                 
                 const jsonPairs = message.data?.file?.data;
                 if (!jsonPairs || jsonPairs.length < 1) {
