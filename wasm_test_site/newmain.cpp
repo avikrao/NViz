@@ -98,7 +98,7 @@ public:
     std::vector<TrainingPair> training_pair_list;
     bool training_switch = false;
     int next_training_pair = -1;
-    unsigned long long iterations = 0;
+    unsigned long long epochs = 0;
 
     NeuralNetwork() = default;
 
@@ -109,6 +109,8 @@ public:
     void set_layer_counts(const emscripten::val &js_layers) {
 
         layers.clear();
+        epochs = 0;
+        next_training_pair = -1;
         std::vector<int> layer_counts = emscripten::convertJSArrayToNumberVector<int>(js_layers);
         for (int i = 1; i < layer_counts.size(); i++) {
             layers.push_back(Layer(layer_counts[i], layer_counts[i-1]));
@@ -195,29 +197,30 @@ public:
         }
     }
 
-    int train(int count) {
+    double train(int count) {
         training_switch = true;
+        double sum_error = 0.0;
         for (int i = 0; i < count; i++) {
             if (++next_training_pair >= training_pair_list.size()) {
                 next_training_pair = 0;
-                iterations++;
+                epochs++;
             }
             const std::vector<double> &inputs = training_pair_list[next_training_pair].inputs();
             const std::vector<double> &expected = training_pair_list[next_training_pair].outputs();
             std::vector<double> outputs = feed_forward(inputs);
-            double sum_error = 0.0;
+            sum_error = 0.0;
             for (int j = 0; j < expected.size(); j++) {
                 sum_error += std::pow((expected[j] - outputs[j]), 2);
             }
             back_propagate(expected);
             update_weights(inputs);
         }
-        return iterations;
+        return sum_error;
     }
 
     void stop_training() {
         training_switch = false;
-        std::cout << "Completed iterations: " << iterations << std::endl;
+        std::cout << "Completed epochs: " << epochs << std::endl;
     }
 
     std::vector<std::vector<double>> get_layer(int index) {
@@ -227,6 +230,10 @@ public:
         }
 
         return layer;
+    }
+
+    int get_epochs() {
+        return epochs;
     }
 };
 
@@ -240,7 +247,8 @@ EMSCRIPTEN_BINDINGS(neural_visual) {
         .function("stopTraining", &NeuralNetwork::stop_training)
         .function("getRunStatus", &NeuralNetwork::get_run_status)
         .function("getLayer", &NeuralNetwork::get_layer)
-        .function("predict", &NeuralNetwork::predict);
+        .function("predict", &NeuralNetwork::predict)
+        .function("getEpochs", &NeuralNetwork::get_epochs);
     emscripten::register_vector<std::vector<double>>("std::vector<std::vector<double>>");
     emscripten::register_vector<double>("std::vector<double>");
 }

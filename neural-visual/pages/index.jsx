@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import ReactFlow, { addEdge, Background } from 'react-flow-renderer';
+import ReactFlow, { addEdge, Background, Controls } from 'react-flow-renderer';
 import linspace from "exact-linspace";
 import chroma from "chroma-js";
 import LayerList from '../components/LayerList';
@@ -21,6 +21,8 @@ export default function Index() {
   const [fileVisible, setFileVisibility] = useState(false);
   const [layerList, setLayerList] = useState([3, 2, 5, 3, 1]);
   const [elementList, setElementList] = useState();
+  const [epochs, setEpochs] = useState(0);
+  const [error, setError] = useState(0.0);
 
   const nodeList = useRef();
   const nodeMatrix = useRef();
@@ -55,6 +57,8 @@ export default function Index() {
           return;
         case ReturnCode.TrainingUpdate :
           if (message.data.weights) {
+            setEpochs(message.data.epochs);
+            setError(message.data.error);
             updateWeights(message.data.weights, true);
           }
       }
@@ -134,6 +138,7 @@ export default function Index() {
             // animated: true,
             source: newNodeMatrix[i][j].toString(),
             target: newNodeMatrix[i+1][k].toString(),
+            style: { stroke: "#fff" },
           },newEdges);
           edgeCount++;
         }
@@ -178,7 +183,7 @@ export default function Index() {
             target: nodeMatrix.current[i+1][j].toString(),
             style: {
               stroke: colorScale((weights[i][j][k] - minWeight)/(scale)).toString(),
-            }
+            },
           }, newEdges);
           edgeId++;
         }
@@ -260,9 +265,9 @@ export default function Index() {
       <div className='flex w-full bg-gray-900 h-40 items- border-y-2 border-teal-900'>
 
         <div className="w-1/6 flex flex-col">
-          <label className='uppercase text-teal-600 text-sm ml-6 mt-2 h-1/6'>Input file</label>
+          <label className='uppercase text-teal-600 text-sm ml-6 mt-2 h-1/6'>Training Data</label>
           <input type="file" 
-            className={`ml-6 my-2 h-full text-white hover:cursor-pointer ${fileVisible ? "" : "text-transparent"}`} 
+            className={`ml-6 my-2 h-full text-white hover:cursor-pointer`} 
             onChange={event => onFileUpload(event.target.files)}>
           </input>
         </div>
@@ -275,7 +280,8 @@ export default function Index() {
               inputs={layerList[0]} 
               outputs={layerList[layerList.length-1]} 
               layers={layerList.slice(1, layerList.length-1)} 
-              onLayersSet={setLayerList}>
+              onLayersSet={setLayerList}
+              editable={!trainingState}>
             </LayerList>
           </div>
         </div>
@@ -340,14 +346,52 @@ export default function Index() {
 
       </div>
 
-      <div className="h-full">
-        <ReactFlow 
-          className="flex bg-gray-900 relative" 
-          elements={elementList} 
-          nodeTypes={{inputNode: FlowInputNode, biasNode: FlowBiasNode, outputNode: FlowOutputNode, layerNode: FlowLayerNode}}>
-          <Background color="#fff"/>
-          {/* <div className='absolute top-0 right-0 w-1/6 h-1/6 border-2 border-teal-900 border-t-0 bg-gray-900'></div> */}
-        </ReactFlow>
+      <div className="flex flex-row h-full relative">
+        <div className='w-5/6 h-full'>
+          <ReactFlow 
+            className="flex bg-gray-900 h-full w-full" 
+            elements={elementList} 
+            nodeTypes={{inputNode: FlowInputNode, biasNode: FlowBiasNode, outputNode: FlowOutputNode, layerNode: FlowLayerNode}}>
+            <Background color="#fff"/>
+            <Controls/>
+          </ReactFlow>
+        </div>
+        
+        <div className='w-1/6 border-2 border-teal-900 h-full bg-gray-900 border-t-0 flex flex-col text-white'>
+          <div className='flex flex-col h-1/3 border-b-2 border-teal-700'>
+            <div className='flex flex-col mt-4 ml-4 h-1/4 text-xl'>
+              <p className='mb-4'>Epochs: {epochs}</p>
+              <p className=''>Error: <span className='text-sm'>{error}</span></p>
+            </div>
+          </div>
+          <div className='flex flex-col h-full text-sm break-all'>
+            <div className='flex flex-col mt-4 ml-4 text-white h-1/5'>
+              <p className='mb-2 uppercase text-teal-600'>Input File</p>
+              <input type="file" className='h-full hover:cursor-pointer'/>
+            </div>
+            <div className='flex w-full h-1/6 items-center justify-center'>
+              {!trainingState && 
+                <button className='h-1/2 w-3/4  border-teal-500 border-2 rounded-xl uppercase hover:bg-teal-500 hover:text-gray-800'>Predict</button>
+              }
+              {trainingState && 
+                <button className='h-1/2 w-3/4  border-teal-500 border-2 rounded-xl uppercase cursor-not-allowed' title='Cannot run during training'>Predict</button>
+              }
+            </div>
+            {!trainingState &&
+              <div className='flex flex-col h-1/2 w-full items-center justify-center'>
+                <button className='h-1/5 w-5/6  border-teal-500 border-2 rounded-xl uppercase mb-8 hover:bg-teal-500 hover:text-gray-800'>Download Outputs</button>
+                <button className='h-1/5 w-5/6  border-teal-500 border-2 rounded-xl uppercase hover:bg-teal-500 hover:text-gray-800'>Download Model Weights</button>
+              </div>
+            }
+            {trainingState &&
+              <div className='flex flex-col h-1/2 w-full items-center justify-center'>
+                <button className='h-1/5 w-5/6  border-teal-500 border-2 rounded-xl uppercase mb-8 cursor-not-allowed' title="Cannot download during training">Download Outputs</button>
+                <button className='h-1/5 w-5/6  border-teal-500 border-2 rounded-xl uppercase cursor-not-allowed' title='Cannot download during training'>Download Model Weights</button>
+              </div>
+            }
+          </div>
+        </div>
+        
       </div>
 
     </div>  

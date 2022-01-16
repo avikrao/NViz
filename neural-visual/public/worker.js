@@ -1,4 +1,4 @@
-self.importScripts("newmain.js");
+self.importScripts("main.js");
 self.importScripts("workercodes.js");
 
 Module.onRuntimeInitialized = async () => {
@@ -13,6 +13,7 @@ Module.onRuntimeInitialized = async () => {
     let inputSize = 0; 
     let outputSize = 0;
     let epochs = 0;
+    let error = 0.0;
     let weights = [];
 
     function getWeights() {
@@ -39,7 +40,7 @@ Module.onRuntimeInitialized = async () => {
                 // PLACEHOLDER FOR STOP TRAINING CODE
                 nn.stopTraining();
                 weights = getWeights();
-                postMessage({code: ReturnCode.StoppedTraining, weights: weights, epochs: epochs});
+                postMessage({code: ReturnCode.StoppedTraining, weights: weights, epochs: epochs, error: error});
                 break;
             case MessageCode.StartTraining :
 
@@ -62,9 +63,10 @@ Module.onRuntimeInitialized = async () => {
                     // PLACEHOLDER FOR START TRAINING CODE
                     postMessage({code: ReturnCode.StartSuccess});
                     do {
-                        epochs = nn.train(trainingSpeed);
+                        error = nn.train(trainingSpeed);
+                        epochs = nn.getEpochs();
                         weights = getWeights();
-                        postMessage({code: ReturnCode.TrainingUpdate, weights: weights});
+                        postMessage({code: ReturnCode.TrainingUpdate, weights: weights, epochs: epochs, error: error});
                         await new Promise(resolve => setTimeout(resolve));
                     } while (nn.getRunStatus());
                 }
