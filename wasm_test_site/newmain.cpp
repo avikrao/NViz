@@ -121,6 +121,10 @@ public:
         return training_pair_list;
     }
 
+    void reset_training_pairs() {
+        training_pair_list.clear();
+    }
+
     void add_training_pair(const emscripten::val input_val, const emscripten::val output_val) {
         training_pair_list.push_back(TrainingPair(input_val, output_val));
     }
@@ -248,7 +252,8 @@ EMSCRIPTEN_BINDINGS(neural_visual) {
         .function("getRunStatus", &NeuralNetwork::get_run_status)
         .function("getLayer", &NeuralNetwork::get_layer)
         .function("predict", &NeuralNetwork::predict)
-        .function("getEpochs", &NeuralNetwork::get_epochs);
+        .function("getEpochs", &NeuralNetwork::get_epochs)
+        .function("resetTrainingPairs", &NeuralNetwork::reset_training_pairs);
     emscripten::register_vector<std::vector<double>>("std::vector<std::vector<double>>");
     emscripten::register_vector<double>("std::vector<double>");
 }

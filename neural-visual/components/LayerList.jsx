@@ -143,9 +143,9 @@ const LayerList = ({inputs, outputs, layers, onLayersSet, editable}) => {
     return (
         <div className='flex flex-row w-full justify-start'>
 
-            <div className='flex flex-row w-1/6 border-2 border-teal-700 rounded-xl items-center overflow-hidden mr-4'>
-                <div className='flex w-1/2 bg-teal-700 text-gray-300 justify-center border-r-2 border-teal-700 h-full items-center text-sm'>
-                    <p className='w-full text-center items-center justify-center break-all'>Inputs:</p>
+            <div className='flex flex-row w-1/6 border-2 border-teal-700 rounded-xl items-center overflow-hidden mr-4 shrink'>
+                <div className='flex w-1/2 bg-teal-700 text-gray-300 justify-center border-r-2 border-teal-700 h-full items-center text-[1em]'>
+                    <p className='w-full text-center items-center justify-center break-all'>Inputs</p>
                 </div>
                 <div className='flex flex-col w-1/2 h-full'>
                     <div className="flex h-full">
@@ -162,7 +162,7 @@ const LayerList = ({inputs, outputs, layers, onLayersSet, editable}) => {
                 </div>
             </div>
 
-            <div className='layersBox flex flex-row border-red-400 w-2/3 items-center'>
+            <div className='layersBox flex flex-row border-red-400 w-2/3 items-center shrink'>
                 {layerCounts.map((count, index) => 
                     <LayerNodeCount 
                         layerIndex={index} 
@@ -175,9 +175,9 @@ const LayerList = ({inputs, outputs, layers, onLayersSet, editable}) => {
                 {canAdd && <NewLayerButton onAdd={addNewLayer} editable={editable}></NewLayerButton>}
             </div>
 
-            <div className='flex flex-row w-1/6 border-2 border-teal-700 rounded-xl items-center overflow-hidden ml-auto' >
-                <div className='flex flex-shrink-0 w-1/2 bg-teal-700 text-gray-300 justify-center border-r-2 border-teal-700 h-full items-center text-sm'>
-                    <p className='w-full justify-center items-center text-center break-all'>Outputs:</p>
+            <div className='flex flex-row w-1/6 border-2 border-teal-700 rounded-xl items-center overflow-hidden ml-auto shrink' >
+                <div className='flex flex-shrink-0 w-1/2 bg-teal-700 text-gray-300 justify-center border-r-2 border-teal-700 h-full items-center text-[1em]'>
+                    <p className='w-full justify-center items-center text-center break-all'>Outputs</p>
                 </div>
                 <div className='flex flex-col w-1/2 h-full'>
                     <div className="flex h-full">

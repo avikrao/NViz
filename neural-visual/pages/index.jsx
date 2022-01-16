@@ -25,6 +25,9 @@ export default function Index() {
   const [error, setError] = useState(0.0);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalCode, setModalCode] = useState();
+  const [inputsUploaded, setInputsUploaded] = useState(false);
+  const [predictable, setPredictable] = useState(false);
+  const [predict, setPredicted] = useState(false);
 
   const nodeList = useRef();
   const nodeMatrix = useRef();
@@ -38,6 +41,7 @@ export default function Index() {
   useEffect(() => {
     worker.current = new Worker("worker.js");
     worker.current.addEventListener("message", message => {
+      console.log(message.data.code);
       switch(message.data.code) {
         case ReturnCode.ModuleReady :
           worker.current.postMessage({code: MessageCode.LayersSet, layers: layerList});
@@ -64,8 +68,16 @@ export default function Index() {
             updateWeights(message.data.weights, true);
           }
           return;
+        case ReturnCode.InputUploadSuccess :
+          setPredictable(true);
+          return;
         case ReturnCode.JSONSuccess :
           return;
+        case ReturnCode.InvalidInputJSONFormat :
+        case ReturnCode.InputFileEntrySizeError :
+        case ReturnCode.InputFileFormatError :
+        case ReturnCode.InputFileNumberError :
+          setPredictable(false);
         default :
           setModalCode(message.data.code);
           setModalOpen(true);
@@ -171,8 +183,6 @@ export default function Index() {
 
   const updateWeights = (weights, running) => {
 
-    console.log(weights);
-
     const flattenedweights = weights.flat(Infinity),
       maxWeight = Math.max(...flattenedweights),
       minWeight = Math.min(...flattenedweights),
@@ -199,7 +209,6 @@ export default function Index() {
       }
     }
 
-    console.log([...nodeList.current, ...newEdges]);
     setElementList([...nodeList.current, ...newEdges]);
   }
 
@@ -207,7 +216,8 @@ export default function Index() {
     const latestFile = fileList[fileList.length-1];
 
     if (latestFile.type !== "application/json") {
-      console.log(latestFile.type);
+      setModalCode(ReturnCode.JSONFormatError);
+      setModalOpen(true);
       return;
     }
 
@@ -216,7 +226,8 @@ export default function Index() {
     reader.addEventListener("load", async (event) => {
       const dataAsJson = JSON.parse(event.target.result);
       if (!dataAsJson?.data?.length) {
-        console.log(dataAsJson);
+        setModalCode(ReturnCode.JSONFormatError);
+        setModalOpen(true);
         return;
       }
       worker.current.postMessage({code: MessageCode.TrainingUpload, file: dataAsJson});
@@ -225,17 +236,21 @@ export default function Index() {
 
   const onInputUpload = async (fileList) => {
     const uploadedFile = fileList[0];
-    if (uploadedFile.type === "application/json") {
-      // error!
+    if (uploadedFile.type !== "application/json") {
+      setPredictable(false);
+      setModalCode(ReturnCode.InputFileFormatError);
+      setModalOpen(true);
       return;
     }
 
     const reader = new FileReader();
-    reader.readAsText(latestFile);
+    reader.readAsText(uploadedFile);
     reader.addEventListener("load", async (event) => {
       const dataAsJson = JSON.parse(event.target.result);
       if (!dataAsJson?.inputs?.length) {
-        // error!
+        setPredictable(false);
+        setModalCode(ReturnCode.InvalidInputJSONFormat);
+        setModalOpen(true);
         return;
       }
       worker.current.postMessage({code: MessageCode.InputUpload, file: dataAsJson});
@@ -277,7 +292,6 @@ export default function Index() {
   }
 
   const stopTraining = () => {
-    console.log(elementList);
     worker.current.postMessage({code: MessageCode.StopTraining});
   }
 
@@ -285,9 +299,13 @@ export default function Index() {
     setModalOpen(false);
   }
 
+  const runPrediction = () => {
+
+  }
+
   return (
 
-    <div className='site flex flex-col h-screen'>
+    <div className='site flex flex-col h-screen w-screen'>
       <ErrorModal open={modalOpen} onClose={onModalClose} error={modalCode}></ErrorModal>
       <div className='flex flex-row w-full bg-gray-900 h-20 items-center'>
         <div className='ml-6 mr-6'>
@@ -305,15 +323,17 @@ export default function Index() {
 
       <div className='flex w-full bg-gray-900 h-40 items- border-y-2 border-teal-900'>
 
-        <div className="w-1/6 flex flex-col">
+        <div className="w-1/6 flex flex-col shrink">
           <label className='uppercase text-teal-600 text-sm ml-6 mt-2 h-1/6'>Training Data</label>
           <input type="file" 
             className={`ml-6 my-2 h-full text-white hover:cursor-pointer`} 
-            onChange={event => onTrainingUpload(event.target.files)}>
+            onChange={event => onTrainingUpload(event.target.files)}
+            accept="application/json" 
+            disabled={trainingState}>
           </input>
         </div>
 
-        <div className="w-1/2 flex flex-col">
+        <div className="w-1/2 flex flex-col shrink">
           <p className='flex uppercase text-teal-600 text-sm mt-2'>Layers</p>
           <div className='flex flex-row h-1/2 mt-1'>
             <LayerList 
@@ -327,7 +347,7 @@ export default function Index() {
           </div>
         </div>
 
-        <div className='flex w-1/6 h-full justify-center'>
+        <div className='flex w-1/6 h-full justify-center shrink'>
           <div className='flex flex-col h-full justify-center w-5/6 text-white mt-1'>
             <label className='uppercase text-teal-600 text-sm mb-1'>Learning Rate</label>
             <div className='flex flex-row mb-1'>
@@ -370,7 +390,7 @@ export default function Index() {
           </div>
         </div>
 
-        <div className='flex w-1/6 items-center justify-center'>
+        <div className='flex w-1/6 items-center justify-center shrink'>
           
           {!trainingState && <button
             className='w-2/3 h-3/5 border-teal-500 border-2 rounded-2xl text-center text-white hover:bg-teal-500 hover:text-gray-800 cursor-pointer' 
@@ -405,21 +425,26 @@ export default function Index() {
               <p className=''>Error: <span className='text-sm'>{error}</span></p>
             </div>
           </div>
-          <div className='flex flex-col h-full text-sm break-all'>
+          <div className='flex flex-col h-full text-[1em] break-all'>
             <div className='flex flex-col mt-4 ml-4 text-white h-1/5'>
               <p className='mb-2 uppercase text-teal-600'>Input File</p>
               <input 
                 type="file" 
                 className='h-full hover:cursor-pointer'
-                onChange={event => onInputUpload(event.target.files)}/>
+                onChange={event => onInputUpload(event.target.files)}
+                accept='application/json'/>
             </div>
-            <div className='flex w-full h-1/6 items-center justify-center'>
-              {!trainingState && 
-                <button className='h-1/2 w-3/4  border-teal-500 border-2 rounded-xl uppercase hover:bg-teal-500 hover:text-gray-800'>Predict</button>
+            <div className='flex w-full h-1/6 items-center justify-center flex-col'>
+              {!trainingState && predictable && 
+                <button className='h-1/2 w-3/4  border-teal-500 border-2 rounded-xl uppercase hover:bg-teal-500 hover:text-gray-800'
+                  onClick={runPrediction}>Predict</button>
               }
-              {trainingState && 
-                <button className='h-1/2 w-3/4  border-teal-500 border-2 rounded-xl uppercase cursor-not-allowed' title='Cannot run during training'>Predict</button>
+              {(trainingState || !predictable) && 
+                <button 
+                  className='h-1/2 w-3/4  border-teal-500 border-2 rounded-xl uppercase cursor-not-allowed' 
+                  title={!predictable ? "Upload input file to make predictions" : 'Cannot run during training'}>Predict</button>
               }
+              <p className="text-green-500 mt-1 text-sm hidden">Success. Download outputs below.</p>
             </div>
             {!trainingState &&
               <div className='flex flex-col h-1/2 w-full items-center justify-center'>

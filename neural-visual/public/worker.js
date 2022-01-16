@@ -16,6 +16,8 @@ Module.onRuntimeInitialized = async () => {
     let error = 0.0;
     let weights = [];
 
+    let predictionInputs = [];
+
     function getWeights() {
         const newWeights = [];
         for (let layer = 0; layer < layerCounts.length-1; layer++) {
@@ -45,22 +47,13 @@ Module.onRuntimeInitialized = async () => {
             case MessageCode.StartTraining :
 
                 if (!(inputSize && outputSize)) {
-                    console.log(inputSize);
-                    console.log(outputSize);
                     postMessage({code: ReturnCode.MissingJSON});
-                    console.log("error1");
                 } else if (!layerCounts.length) {
                     postMessage({code: ReturnCode.InvalidLayers});
-                    console.log("error2");
                 } else if (layerCounts[0] != inputSize) {
-                    console.log(layerCounts)
-                    console.log(inputSize);
                     postMessage({code: ReturnCode.InvalidInputs});
-                    console.log("error3");
                 } else if (layerCounts[layerCounts.length-1] != outputSize) {
                     postMessage({code: ReturnCode.InvalidOutputs});
-                    console.log(outputSize);
-                    console.log(layerCounts[layerCounts.length-1])
                 } else {
                     // PLACEHOLDER FOR START TRAINING CODE
                     postMessage({code: ReturnCode.StartSuccess});
@@ -76,6 +69,7 @@ Module.onRuntimeInitialized = async () => {
 
             case MessageCode.TrainingUpload :
                 
+                nn.resetTrainingPairs();
                 const jsonPairs = message.data?.file?.data;
                 if (!jsonPairs || jsonPairs.length < 1) {
                     
@@ -86,19 +80,19 @@ Module.onRuntimeInitialized = async () => {
                 const inputLength = jsonPairs[0]["in"].length;
                 const outputLength = jsonPairs[0]["out"].length;
 
-                for (const jsonPair of jsonPairs) {
+                for (const [pairIndex, jsonPair] of jsonPairs.entries()) {
                     const pairIn = jsonPair["in"];
                     const pairOut = jsonPair["out"];
                     if (!(pairIn && pairOut) 
                         || pairIn.length != inputLength 
                         || pairOut.length != outputLength) {
-                        postMessage({code: ReturnCode.JSONPairSizeError});
+                        postMessage({code: ReturnCode.JSONPairSizeError, index: pairIndex});
                         return;
                     }
 
-                    for (const val of pairIn) {
+                    for (const [valIndex, val] of pairIn.entries()) {
                         if (!Number.isFinite(val)) {
-                            postMessage({code: ReturnCode.JSONPairEntryError});
+                            postMessage({code: ReturnCode.JSONPairEntryError, pairIndex: pairIndex, valIndex: valIndex});
                             return;
                         }
                     }
@@ -117,7 +111,6 @@ Module.onRuntimeInitialized = async () => {
             case MessageCode.LayersSet :
                 
                 if (payload.layers) {
-                    console.log(payload.layers)
                     layerCounts = [payload.layers[0] + 1, ...payload.layers.slice(1)];
                 }
                 nn.setLayerCounts(layerCounts);
@@ -129,6 +122,33 @@ Module.onRuntimeInitialized = async () => {
                     nn.setLearningRate(payload.learningRate);
                 }
                 return;       
+            case MessageCode.InputUpload :
+
+                predictionInputs = [];
+
+                const uploadedInputs = message?.data?.file?.inputs;
+                if (!uploadedInputs) {
+                    postMessage({code: ReturnCode.InvalidInputJSONFormat})
+                }
+
+                for (const inputList of uploadedInputs) {
+                    if (inputList.length !== layerCounts[0] - 1) {
+                        postMessage({code: ReturnCode.InputFileEntrySizeError});
+                        return;
+                    }
+
+                    for (const val of inputList) {
+                        if (!Number.isFinite(val)) {
+                            postMessage({code: ReturnCode.InputFileNumberError});
+                            return;
+                        }
+                    }
+
+                    predictionInputs.push(inputList);
+                }
+
+                postMessage({code: ReturnCode.InputUploadSuccess})
+                return;
         }
     }
 }

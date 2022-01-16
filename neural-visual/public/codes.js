@@ -11,6 +11,11 @@ export const ReturnCode = {
     StartSuccess: 9,
     StoppedTraining: 10,
     TrainingUpdate: 11,
+    InputFileFormatError: 12,
+    InvalidInputJSONFormat: 13,
+    InputFileEntrySizeError: 14,
+    InputFileNumberError: 15,
+    InputUploadSuccess: 16,
 }
 
 export const MessageCode = {
@@ -19,4 +24,5 @@ export const MessageCode = {
     TrainingUpload: 2,
     LayersSet: 3,
     ValuesUpdate: 4,
+    InputUpload: 5,
 }
