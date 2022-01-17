@@ -206,22 +206,24 @@ public:
     double train(int count) {
         training_switch = true;
         double sum_error = 0.0;
+        double mean_squared_error = 0.0;
         for (int i = 0; i < count; i++) {
             if (++next_training_pair >= training_pair_list.size()) {
+                mean_squared_error = sum_error/training_pair_list.size();
+                sum_error = 0.0;
                 next_training_pair = 0;
                 epochs++;
             }
             const std::vector<double> &inputs = training_pair_list[next_training_pair].inputs();
             const std::vector<double> &expected = training_pair_list[next_training_pair].outputs();
             std::vector<double> outputs = feed_forward(inputs);
-            sum_error = 0.0;
             for (int j = 0; j < expected.size(); j++) {
                 sum_error += std::pow((expected[j] - outputs[j]), 2);
             }
             back_propagate(expected);
             update_weights(inputs);
         }
-        return sum_error;
+        return mean_squared_error;
     }
 
     void stop_training() {

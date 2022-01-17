@@ -108,6 +108,7 @@ export default function Index() {
     let newEdges = [];
 
     let xCord = 100;
+    let xDist = 250;
     let nodeId = 1;
     for (const [layerIndex, layerCount] of layersWithBias.entries()) {
       newNodeMatrix.push([]);
@@ -130,7 +131,7 @@ export default function Index() {
           position: {x: xCord, y: space[space.length-2]}
         })
         newNodeMatrix[newNodeMatrix.length - 1].push(nodeId++);
-        xCord += 200;
+        xCord += xDist;
       } else if (layerIndex != layerList.length-1) {
 
         const space = linspace(0, (maxLayer*100), layerCount+2);
@@ -144,7 +145,7 @@ export default function Index() {
           newNodeMatrix[newNodeMatrix.length - 1].push(nodeId++);
         }
 
-        xCord += 200;
+        xCord += xDist;
         
       } else {
         const space = linspace(0, maxLayer*100, layerCount+2);
@@ -456,7 +457,7 @@ export default function Index() {
                   className='h-1/2 w-3/4  border-teal-500 border-2 rounded-xl uppercase cursor-not-allowed' 
                   title={!predictable ? "Upload input file to make predictions" : 'Cannot run during training'}>Predict</button>
               }
-              <p className="text-green-500 mt-1 text-sm" hidden={!predicted}>Success. Download outputs below.</p>
+              <p className="text-green-500 mt-1 text-sm break-words" hidden={!predicted}>Success. Download outputs below.</p>
             </div>
             {!trainingState && 
               <div className='flex flex-col h-1/2 w-full items-center justify-center'>
