@@ -25,18 +25,19 @@ export default function Index() {
   const [error, setError] = useState(0.0);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalCode, setModalCode] = useState();
-  const [inputsUploaded, setInputsUploaded] = useState(false);
   const [predictable, setPredictable] = useState(false);
-  const [predict, setPredicted] = useState(false);
+  const [predicted, setPredicted] = useState(false);
+  const [outputsDownloadURL, setOutputsDownloadURL] = useState();
+  const [weightsDownloadURL, setWeightsDownloadURL] = useState();
+  const [weightsDownloadable, setWeightsDownloadable] = useState(false);
+  const [trainingState, setTrainingState] = useState(false);
 
   const nodeList = useRef();
   const nodeMatrix = useRef();
-
-  const [trainingState, setTrainingState] = useState(false);
-
-  const worker = useRef(null);
   const textLearningRate = useRef();
   const textTrainingSpeed = useRef();
+
+  const worker = useRef(null);
 
   useEffect(() => {
     worker.current = new Worker("worker.js");
@@ -54,10 +55,14 @@ export default function Index() {
           return;
         case ReturnCode.StartSuccess :
           setTrainingState(true);
+          setWeightsDownloadable(true);
           return;
         case ReturnCode.StoppedTraining :
           if (message.data.weights) {
             updateWeights(message.data.weights, false);
+            const weightsObject = {"weights": message.data.weights},
+              weightsBlob = new Blob([JSON.stringify(weightsObject, null, 4)], { type: "application/json" });
+            setWeightsDownloadURL(URL.createObjectURL(weightsBlob));
           }
           setTrainingState(false);
           return;
@@ -73,6 +78,12 @@ export default function Index() {
           return;
         case ReturnCode.JSONSuccess :
           return;
+        case ReturnCode.PredictionSuccess :
+          console.log(message.data.outputs);
+          setPredicted(true);
+          const outputFile = new Blob([JSON.stringify(message.data.outputs, null, 4)], { type: "application/json" });
+          setOutputsDownloadURL(URL.createObjectURL(outputFile));
+          return;
         case ReturnCode.InvalidInputJSONFormat :
         case ReturnCode.InputFileEntrySizeError :
         case ReturnCode.InputFileFormatError :
@@ -87,7 +98,7 @@ export default function Index() {
   }, []);
 
   useEffect(() => {
-    if (layerList.includes(0)) { return; }
+    if (layerList.includes(0)) return;
 
     const layersWithBias = [layerList[0] + 1, ...layerList.slice(1)];
     const maxLayer = Math.max(...layersWithBias);
@@ -134,7 +145,7 @@ export default function Index() {
         }
 
         xCord += 200;
-
+        
       } else {
         const space = linspace(0, maxLayer*100, layerCount+2);
         for (let i = 1; i < space.length - 1; i++) {
@@ -179,7 +190,7 @@ export default function Index() {
       learningRate: learningRate, 
       trainingSpeed: trainingSpeed,
     });
-  }, [learningRate, trainingSpeed]);
+  }, [learningRate, trainingSpeed, learningRate]);
 
   const updateWeights = (weights, running) => {
 
@@ -235,6 +246,7 @@ export default function Index() {
   }
 
   const onInputUpload = async (fileList) => {
+    setPredicted(false);
     const uploadedFile = fileList[0];
     if (uploadedFile.type !== "application/json") {
       setPredictable(false);
@@ -300,7 +312,7 @@ export default function Index() {
   }
 
   const runPrediction = () => {
-
+    worker.current.postMessage({code: MessageCode.RunPrediction});
   }
 
   return (
@@ -444,15 +456,33 @@ export default function Index() {
                   className='h-1/2 w-3/4  border-teal-500 border-2 rounded-xl uppercase cursor-not-allowed' 
                   title={!predictable ? "Upload input file to make predictions" : 'Cannot run during training'}>Predict</button>
               }
-              <p className="text-green-500 mt-1 text-sm hidden">Success. Download outputs below.</p>
+              <p className="text-green-500 mt-1 text-sm" hidden={!predicted}>Success. Download outputs below.</p>
             </div>
-            {!trainingState &&
+            {!trainingState && 
               <div className='flex flex-col h-1/2 w-full items-center justify-center'>
-                <button className='h-1/5 w-5/6  border-teal-500 border-2 rounded-xl uppercase mb-8 hover:bg-teal-500 hover:text-gray-800'>Download Outputs</button>
-                <button className='h-1/5 w-5/6  border-teal-500 border-2 rounded-xl uppercase hover:bg-teal-500 hover:text-gray-800'>Download Model Weights</button>
+                {predicted && 
+                  <a className='flex h-1/5 w-5/6 mb-8 cursor-pointer' href={outputsDownloadURL} download>
+                    <div className='flex h-full w-full border-teal-500 border-2 rounded-xl uppercase mb-8 hover:bg-teal-500 hover:text-gray-800 items-center justify-center'>
+                      <p className='text-center'>Download Outputs</p>
+                    </div>
+                  </a>
+                }
+                {!predicted &&
+                  <button className='h-1/5 w-5/6  border-teal-500 border-2 rounded-xl uppercase mb-8 cursor-not-allowed' title="Upload input file and run prediction to download">Download Outputs</button>
+                }
+                {weightsDownloadable && 
+                  <a className='flex h-1/5 w-5/6 cursor-pointer' href={weightsDownloadURL} download>
+                    <div className='flex h-full w-full border-teal-500 border-2 rounded-xl uppercase mb-8 hover:bg-teal-500 hover:text-gray-800 items-center justify-center'>
+                      <p className='text-center'>Download Model Weights</p>
+                    </div>
+                  </a>
+                }
+                {!weightsDownloadable &&
+                  <button className='h-1/5 w-5/6  border-teal-500 border-2 rounded-xl uppercase cursor-not-allowed' title='Cannot download before training'>Download Model Weights</button>
+                }
               </div>
             }
-            {trainingState &&
+            {trainingState  &&
               <div className='flex flex-col h-1/2 w-full items-center justify-center'>
                 <button className='h-1/5 w-5/6  border-teal-500 border-2 rounded-xl uppercase mb-8 cursor-not-allowed' title="Cannot download during training">Download Outputs</button>
                 <button className='h-1/5 w-5/6  border-teal-500 border-2 rounded-xl uppercase cursor-not-allowed' title='Cannot download during training'>Download Model Weights</button>

@@ -1,303 +1,254 @@
 #include <iostream>
+#include <vector>
+#include <cmath>
+#include <random>
 #include <emscripten.h>
 #include <emscripten/bind.h>
-#include <unistd.h>
-#include <cmath>
-
-#define console std::cout << "[C++] "
 
 class NeuralNetwork {
+private: 
 
-    private:
-        float _learning_rate;
-        std::vector<int> _layer_counts;
-        std::vector<std::vector<std::vector<float>>> _layers;
-        std::vector<std::vector<std::vector<float>>> _gradients;
-        std::vector<std::vector<std::vector<float>>> _change_by;
-        bool _training_switch = false;
-        size_t _next_training_pair = -1;
-        unsigned long long _completed_iterations = 0;
+    class Layer {
+    public:
 
-        class TrainingPair {
+        struct Neuron {
 
-            public: 
-                TrainingPair(emscripten::val &input_val, emscripten::val &output_val) {
-                    _input_vector = emscripten::convertJSArrayToNumberVector<float>(input_val);
-                    _output_vector = emscripten::convertJSArrayToNumberVector<float>(output_val);
+            double delta;
+            double output;
+            std::vector<double> weights;
+            Neuron(int num_inputs) {
+                delta = 0.0;
+                output = 0.0;
+                for (int i = 0; i < num_inputs; i++) {
+                    weights.push_back((double)rand() / RAND_MAX);
+                }
+            }
+
+            double dot(const std::vector<double> &v1, const std::vector<double> &v2) {
+                if (v1.size() != v2.size()) {
+                    std::cout << "Dot product error. " << std::endl;
+                    return 0.0;
                 }
 
-                std::vector<float> inputs() {
-                    return _input_vector;
+                double total = 0.0;
+                for (size_t i = 0; i < v1.size(); i++) {
+                    total += v1[i] * v2[i];
                 }
 
-                float input_entry(size_t index) {
-                    return _input_vector.at(index);
-                }
+                return total;
+            }
 
-                std::vector<float> outputs() {
-                    return _output_vector;
-                }
+            double transfer(double x) {
+                // return std::tanh(x);
+                return 1.0/(1 + std::exp(-x));
+            }
 
-                float output_entry(size_t index) {
-                    return _output_vector.at(index);
-                }
+            double fire(std::vector<double> &inputs) {
+                output = transfer(dot(inputs, weights));
+                return output;
+            }
 
-            private:
-                std::vector<float> _input_vector;
-                std::vector<float> _output_vector;
+            double derivative() {
+                // return 1.0 - output*output;
+                return output*(1.0 - output);
+            }
         };
 
-        std::vector<TrainingPair> _training_pair_list;
+        std::vector<Neuron> neurons;
 
-        float _dot(std::vector<float> &inputs, std::vector<float> &weights) {
-
-            if (inputs.size() != weights.size()) {
-                console << "Dot product issue." << std::endl;
-                console << "Inputs size: " << inputs.size() << " Weights size: " << weights.size() << std::endl;
-                return 0.0;
+        Layer(int num_neurons, int num_inputs) {
+            for(int i = 0; i < num_neurons; i++) {
+                neurons.push_back(Neuron(num_inputs));
             }
-
-            float sum = 0.0;
-            for (size_t i = 0; i < inputs.size(); i++) {
-                sum += inputs.at(i) * weights.at(i);
-            }
-
-            return sum;
         }
 
-        std::vector<float> _hadamard(std::vector<float> &inputs, std::vector<float> &weights) {
+    };
 
-            if (inputs.size() != weights.size()) {
-                console << "Hadamard product issue." << std::endl;
-                console << "Inputs size: " << inputs.size() << " Weights size: " << weights.size() << std::endl;
-                return std::vector<float>();
+    class TrainingPair {
+
+        public: 
+            TrainingPair(const emscripten::val &input_val, const emscripten::val &output_val) {
+                _input_vector = emscripten::convertJSArrayToNumberVector<double>(input_val);
+                _output_vector = emscripten::convertJSArrayToNumberVector<double>(output_val);
             }
 
-            std::vector<float> new_vector;
-            for (size_t i = 0; i < inputs.size(); i++) {
-                new_vector.push_back(inputs.at(i) * weights.at(i));
+            std::vector<double> inputs() {
+                return _input_vector;
             }
 
-            return new_vector;
+            double input_entry(size_t index) {
+                return _input_vector.at(index);
+            }
+
+            std::vector<double> outputs() {
+                return _output_vector;
+            }
+
+            double output_entry(size_t index) {
+                return _output_vector.at(index);
+            }
+
+        private:
+            std::vector<double> _input_vector;
+            std::vector<double> _output_vector;
+    };
+
+public: 
+
+    double learning_rate;
+    std::vector<Layer> layers;
+    std::vector<TrainingPair> training_pair_list;
+    bool training_switch = false;
+    int next_training_pair = -1;
+    unsigned long long epochs = 0;
+
+    NeuralNetwork() = default;
+
+    void set_learning_rate(double rate) {
+        learning_rate = rate;
+    }
+
+    void set_layer_counts(const emscripten::val &js_layers) {
+
+        layers.clear();
+        epochs = 0;
+        next_training_pair = -1;
+        std::vector<int> layer_counts = emscripten::convertJSArrayToNumberVector<int>(js_layers);
+        for (int i = 1; i < layer_counts.size(); i++) {
+            layers.push_back(Layer(layer_counts[i], layer_counts[i-1]));
         }
+    }
 
-        std::vector<std::vector<std::vector<float>>> _create_layer_structure(bool random) {
+    std::vector<TrainingPair> training_pairs() {
+        return training_pair_list;
+    }
 
-            std::vector<std::vector<std::vector<float>>> main_vector;
-            for (size_t i = 0; i < _layer_counts.size() - 1; i++) {
+    void reset_training_pairs() {
+        training_pair_list.clear();
+    }
 
-                std::vector<std::vector<float>> inner_vector;
-                for (size_t j = 0; j < _layer_counts.at(i+1); j++) {
-                    std::vector<float> innermost_vector;
-                    for (size_t k = 0; k < _layer_counts.at(i); k++) {
-                        if (random) {
-                            innermost_vector.push_back((double)std::rand() / RAND_MAX);
-                        } else {
-                            innermost_vector.push_back(0.0);
-                        }
+    void add_training_pair(const emscripten::val input_val, const emscripten::val output_val) {
+        training_pair_list.push_back(TrainingPair(input_val, output_val));
+    }
+
+    bool get_run_status() {
+        return training_switch;
+    }
+
+    std::vector<double> feed_forward(const std::vector<double> &inputs) {
+        std::vector<double> x = inputs;
+        for (Layer &layer : layers) {
+            std::vector<double> new_inputs;
+            for (Layer::Neuron &neuron : layer.neurons) {
+                new_inputs.push_back(neuron.fire(x));
+            }
+            x = new_inputs;
+        }
+        return x;
+    }
+
+    std::vector<double> predict(const emscripten::val &js_inp) {
+        std::vector<double> inp = emscripten::convertJSArrayToNumberVector<double>(js_inp);
+        std::vector<double> result = feed_forward(inp);
+        for (double d : result) {
+            std::cout << d << " ";
+        }
+        std::cout << std::endl;
+        return result;
+    }
+
+    void back_propagate(const std::vector<double> &expected){ 
+        for (int i = layers.size() - 1; i >= 0; i--) {
+            Layer &layer = layers[i];
+            std::vector<double> errors;
+            if (i != layers.size() - 1) {
+                for (size_t j = 0; j < layer.neurons.size(); j++) {
+                    double error = 0.0;
+                    for (const Layer::Neuron &neuron : layers[i+1].neurons) {
+                        error += neuron.weights[j] * neuron.delta;
                     }
-                    inner_vector.push_back(innermost_vector);
+                    errors.push_back(error);
                 }
-                main_vector.push_back(inner_vector);
-            }
-            return main_vector;
-        }
-
-        float _transfer(float x) {
-            return 1.0/(1 + std::exp(-x));
-        }
-
-        void _print_weights() { 
-            console << "Layer counts: ";
-            for (int i : _layer_counts) {
-                std::cout << i << " ";
-            }
-            std::cout << std::endl;
-            // std::cout << std::fixed;
-            std::cout.precision(4);
-            for (std::vector<std::vector<float>> &layer : _layers) {
-                for (std::vector<float> &weights : layer) {
-                    for (float weight : weights) {
-                        std::cout << weight << " ";
-                    }
-                }
-                std::cout << std::endl;
-            }
-        }
-
-        std::vector<float> _feed_forward(std::vector<float> &inputs) {
-            std::vector<float> input_list = inputs;
-            std::vector<float> output_list;
-            std::vector<float> new_inputs;
-            float node_z, product;
-            for (std::vector<std::vector<float>> &layer : _layers) {
-                new_inputs.clear();
-                for (std::vector<float> &node : layer) {
-                    node_z = _dot(input_list, node);
-                    product = _transfer(node_z);
-                    new_inputs.push_back(product);
-                }
-                output_list = input_list;
-                input_list = new_inputs;
-            }
-
-            output_list = _hadamard(output_list, _layers.back().front());
-            return output_list;
-        }
-
-        float _sigmoid_deriv(float x) {
-            return x*(1.0 - x);
-        }
-
-        std::vector<float> _backpropagate(const std::vector<float> &inputs, const std::vector<float> target) {
-
-            std::vector<std::vector<float>> z;
-            std::vector<std::vector<float>> a;
-
-            z.push_back(inputs);
-            a.push_back(inputs);
-
-            std::vector<float> inputList = inputs;
-            std::vector<float> outputList;
-            std::vector<float> new_inputs;
-            std::vector<float> layer_z;
-            std::vector<float> layer_a;
-
-            float product, node_z;
-            for (std::vector<std::vector<float>> &layer : _layers) {
-                new_inputs.clear();
-                layer_z.clear();
-                layer_a.clear();
-                for (std::vector<float> &node : layer) {
-                    node_z = _dot(inputList, node);
-                    layer_z.push_back(node_z);
-                    product = _transfer(node_z);
-                    layer_a.push_back(product);
-                    new_inputs.push_back(product);
-                }
-                z.push_back(layer_z);
-                a.push_back(layer_a);
-                outputList = inputList;
-                inputList = new_inputs;
-            }
-
-            outputList = _hadamard(outputList, _layers.back().front());
-            a.pop_back();
-
-            for (int j = 0; j < target.size(); j++) {
-                for (int i = 0; i < outputList.size(); i++) {
-                    _gradients.back().at(j).at(i) = target.at(j) - outputList.at(i);
-                    _change_by.back().at(j).at(i) = _gradients.back().at(j).at(i) * z.back().at(j);
+            } else {
+                for (size_t j = 0; j < layer.neurons.size(); j++) {
+                    Layer::Neuron &neuron = layer.neurons[j];
+                    errors.push_back(expected[j] - neuron.output);
                 }
             }
 
-            // _gradients.back().front().front() = target - outputList.front();
-            // _change_by.back().front().front() = _gradients.back().front().front() * z.back().front();
+            for (size_t j = 0; j < layer.neurons.size(); j++) {
+                Layer::Neuron &neuron = layer.neurons[j];
+                neuron.delta = errors[j] * neuron.derivative();
+            }
+        }
+    }
 
-            for (int layer = -2; layer > -_layer_counts.size(); layer--) {
-                for (int out = 0; out < _gradients.at(_gradients.size() + layer).size(); out++) {
-                    float grad_out = 0.0;
-                    for (int end = 0; end < _gradients.at(layer + 1 + _gradients.size()).size(); end++) {
-                        grad_out += _gradients.at(layer + 1 + _gradients.size()).at(end).at(out) * 
-                            _layers.at(layer + 1 + _layers.size()).at(end).at(out) * 
-                            _sigmoid_deriv(a.at(layer + 1 + a.size()).at(out));
-                    }
-
-                    for (int node = 0; node < _layer_counts.at(layer-1 + _layer_counts.size()); node++) {
-                        _gradients.at(layer + _gradients.size()).at(out).at(node) = grad_out;
-                        _change_by.at(layer + _change_by.size()).at(out).at(node) = grad_out * a.at(layer + a.size()).at(node);
-                    }
+    void update_weights(const std::vector<double> &inputs) {
+        std::vector<double> real_inputs;
+        for (size_t i = 0; i < layers.size(); i++) {
+            if (i != 0) {
+                real_inputs.clear();
+                for (Layer::Neuron &neuron : layers[i-1].neurons) {
+                    real_inputs.push_back(neuron.output);
                 }
+            } else {
+                real_inputs = inputs;
             }
 
-            for (int layer = 0; layer < _layers.size(); layer++) {
-                for (int node = 0; node < _layers.at(layer).size(); node++) {
-                    for (int weight = 0; weight < _layers.at(layer).at(node).size(); weight++) {
-                        _layers[layer][node][weight] += _learning_rate * _change_by.at(layer).at(node).at(weight);
-                    }
+            for (Layer::Neuron &neuron : layers[i].neurons) {
+                for (size_t j = 0; j < real_inputs.size(); j++) {
+                    neuron.weights[j] += learning_rate * neuron.delta * real_inputs[j];
                 }
             }
-
-            _completed_iterations++;
-            return outputList;
         }
+    }
 
-    public:
-        NeuralNetwork() = default;
-
-        void set_learning_rate(float rate) {
-            _learning_rate = rate;
-        }
-
-        void set_layer_counts(emscripten::val js_layers) {
-            _layer_counts = emscripten::convertJSArrayToNumberVector<int>(js_layers);
-            _layers = _create_layer_structure(true);
-            _gradients = _create_layer_structure(false);
-            _change_by = _create_layer_structure(false);
-        }
-
-        std::vector<TrainingPair> training_pairs() {
-            return _training_pair_list;
-        }
-
-        int add_training_pair(emscripten::val input_val, emscripten::val output_val) {
-            _training_pair_list.push_back(TrainingPair(input_val, output_val));
-            return 0;
-        }   
-
-        bool get_run_status() {
-            return _training_switch;
-        }
-
-        int train(int count) {
-            _training_switch = true;
-            for (int i = 0; i < count; i++) {
-                if (++_next_training_pair >= _training_pair_list.size()) {
-                    _next_training_pair = 0;
-                }
-                _backpropagate(_training_pair_list.at(_next_training_pair).inputs(), _training_pair_list.at(_next_training_pair).outputs());
+    double train(int count) {
+        training_switch = true;
+        double sum_error = 0.0;
+        for (int i = 0; i < count; i++) {
+            if (++next_training_pair >= training_pair_list.size()) {
+                next_training_pair = 0;
+                epochs++;
             }
+            const std::vector<double> &inputs = training_pair_list[next_training_pair].inputs();
+            const std::vector<double> &expected = training_pair_list[next_training_pair].outputs();
+            std::vector<double> outputs = feed_forward(inputs);
+            sum_error = 0.0;
+            for (int j = 0; j < expected.size(); j++) {
+                sum_error += std::pow((expected[j] - outputs[j]), 2);
+            }
+            back_propagate(expected);
+            update_weights(inputs);
+        }
+        return sum_error;
+    }
 
-            return _completed_iterations;
+    void stop_training() {
+        training_switch = false;
+        std::cout << "Completed epochs: " << epochs << std::endl;
+    }
+
+    std::vector<std::vector<double>> get_layer(int index) {
+        std::vector<std::vector<double>> layer;
+        for (const Layer::Neuron &neuron : layers[index].neurons) {
+            layer.push_back(neuron.weights);
         }
 
-        void stop_training() {
-            _training_switch = false;
-            _print_weights();
-        }
+        return layer;
+    }
 
-        void log_weights() {
-            _print_weights();
-        }
+    int get_epochs() {
+        return epochs;
+    }
 
-        std::vector<std::vector<float>> get_layer(int index) {
-            return _layers.at(index);
-        }
+    std::vector<double> run_prediction(const emscripten::val &js_input) {
+        std::vector<double> input = emscripten::convertJSArrayToNumberVector<double>(js_input);
+        return feed_forward(input);
+    }
 };
 
-void sleep_and_print() {
-    sleep(5);
-    console << "Slept.";
-    std::cout << std::endl;
-}
-
-int change_first(std::vector<int> &v) {
-    v[0] = 10000;
-    return 0;
-}
-
-int print_js_array(const emscripten::val &v) {
-    std::vector<int> vec = emscripten::convertJSArrayToNumberVector<int>(v);
-    for (int i : vec) {
-        console << i << " ";
-    }
-    std::cout << std::endl;
-    return 0;
-}
-
 EMSCRIPTEN_BINDINGS(neural_visual) {
-    emscripten::function("change_first", &change_first);
-    emscripten::function("printJSArray", &print_js_array);
     emscripten::class_<NeuralNetwork>("NeuralNetwork")
         .constructor()
         .function("setLearningRate", &NeuralNetwork::set_learning_rate)
@@ -306,9 +257,11 @@ EMSCRIPTEN_BINDINGS(neural_visual) {
         .function("train", &NeuralNetwork::train)
         .function("stopTraining", &NeuralNetwork::stop_training)
         .function("getRunStatus", &NeuralNetwork::get_run_status)
-        .function("logWeights", &NeuralNetwork::log_weights)
-        .function("getLayer", &NeuralNetwork::get_layer);
-    emscripten::function("sleepAndPrint", &sleep_and_print);
-    emscripten::register_vector<float>("WeightsVector");
-    emscripten::register_vector<std::vector<float>>("LayerVector");
+        .function("getLayer", &NeuralNetwork::get_layer)
+        .function("predict", &NeuralNetwork::predict)
+        .function("getEpochs", &NeuralNetwork::get_epochs)
+        .function("resetTrainingPairs", &NeuralNetwork::reset_training_pairs)
+        .function("runPrediction", &NeuralNetwork::run_prediction);
+    emscripten::register_vector<std::vector<double>>("std::vector<std::vector<double>>");
+    emscripten::register_vector<double>("std::vector<double>");
 }

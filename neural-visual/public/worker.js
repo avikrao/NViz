@@ -144,10 +144,24 @@ Module.onRuntimeInitialized = async () => {
                         }
                     }
 
-                    predictionInputs.push(inputList);
+                    predictionInputs.push([...inputList, 1.0]);
                 }
 
                 postMessage({code: ReturnCode.InputUploadSuccess})
+                return;
+            case MessageCode.RunPrediction :
+
+                const predictionOutputs = {"outputs": []};
+                for (const inputList of predictionInputs) {
+                    let outputList = [];
+                    let predictedOutput = nn.runPrediction(inputList);
+                    for (let i = 0; i < predictedOutput.size(); i++) {
+                        outputList.push(predictedOutput.get(i));
+                    }
+                    predictionOutputs["outputs"].push(outputList);
+                }
+
+                postMessage({code: ReturnCode.PredictionSuccess, outputs: predictionOutputs});
                 return;
         }
     }

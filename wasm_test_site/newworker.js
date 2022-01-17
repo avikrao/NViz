@@ -1,7 +1,7 @@
-self.importScripts("newmain.js");
+self.importScripts("main.js");
 
 const LEARNING_RATE = 0.08;
-const LAYER_COUNTS = [4, 5, 4, 3];
+const LAYER_COUNTS = [3, 5, 3];
 
 
 Module.onRuntimeInitialized = async () => {
@@ -74,6 +74,7 @@ Module.onRuntimeInitialized = async () => {
                     // }, 60000);
                 do {
                     completedIterations = NeuralNetwork.train(100000);
+                    console.log(`error: ${completedIterations}`);
                     console.log(getWeights());
                     // console.log(getWeights());
                     await new Promise((resolve) => setTimeout(resolve));

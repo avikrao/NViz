@@ -16,6 +16,7 @@ export const ReturnCode = {
     InputFileEntrySizeError: 14,
     InputFileNumberError: 15,
     InputUploadSuccess: 16,
+    PredictionSuccess: 17,
 }
 
 export const MessageCode = {
@@ -25,4 +26,5 @@ export const MessageCode = {
     LayersSet: 3,
     ValuesUpdate: 4,
     InputUpload: 5,
+    RunPrediction: 6,
 }
