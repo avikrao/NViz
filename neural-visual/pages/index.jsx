@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Head from "next/head";
 import Link from "next/link";
 import ReactFlow, { addEdge, Background, Controls } from 'react-flow-renderer';
 import linspace from "exact-linspace";
@@ -320,11 +321,15 @@ export default function Index() {
   return (
 
     <div className='site flex flex-col h-screen w-screen font-vietnam'>
+      <Head>
+        <link rel='shortcut icon' href="/images/favicon.ico"/>
+        <title>NViz | Home</title>
+      </Head>
       <ErrorModal open={modalOpen} onClose={onModalClose} error={modalCode}></ErrorModal>
       <div className='flex flex-row w-full bg-gray-900 h-1/10 items-center'>
         <div className='ml-6 mr-6'>
           <Link href="/">
-            <a className='text-white text-2xl'>NViz</a>
+            <a className='flex flex-row text-white text-2xl items-center hover:text-white'><img src="/images/favicon.ico" className='h-10 mr-4'></img>NViz</a>
           </Link>
         </div>
         <div className='items-center w-1/3'>

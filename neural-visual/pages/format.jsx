@@ -1,3 +1,4 @@
+import Head from "next/head";
 import Link from "next/link";
 import { CodeBlock, obsidian } from "react-code-blocks";
 
@@ -30,10 +31,13 @@ export default function Format() {
 
     return (
         <div className='site flex flex-col h-full w-full bg-gray-900 font-vietnam'>
+            <Head>
+                <title>NViz | Format</title>
+            </Head>
             <div className='flex flex-row w-full bg-gray-900 h-20 items-center border-b-2 border-teal-900'>
                 <div className='ml-6 mr-6'>
                     <Link href="/">
-                        <a className='text-white text-2xl'>NViz</a>
+                        <a className='flex flex-row text-white text-2xl items-center hover:text-white'><img src="/images/favicon.ico" className='h-10 mr-4'></img>NViz</a>
                     </Link>
                 </div>
                 <div className='items-center w-1/3'>
