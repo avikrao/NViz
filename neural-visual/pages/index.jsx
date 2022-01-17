@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Link from "next/link";
 import ReactFlow, { addEdge, Background, Controls } from 'react-flow-renderer';
 import linspace from "exact-linspace";
 import chroma from "chroma-js";
@@ -108,7 +109,7 @@ export default function Index() {
     let newEdges = [];
 
     let xCord = 100;
-    let xDist = 250;
+    let xDist = Math.min(Math.max(250, maxLayer*40), 600);
     let nodeId = 1;
     for (const [layerIndex, layerCount] of layersWithBias.entries()) {
       newNodeMatrix.push([]);
@@ -318,23 +319,29 @@ export default function Index() {
 
   return (
 
-    <div className='site flex flex-col h-screen w-screen'>
+    <div className='site flex flex-col h-screen w-screen font-vietnam'>
       <ErrorModal open={modalOpen} onClose={onModalClose} error={modalCode}></ErrorModal>
-      <div className='flex flex-row w-full bg-gray-900 h-20 items-center'>
+      <div className='flex flex-row w-full bg-gray-900 h-1/10 items-center'>
         <div className='ml-6 mr-6'>
-          <a href="#" className='text-white text-2xl'>Neural Visualisation</a>
+          <Link href="/">
+            <a className='text-white text-2xl'>NViz</a>
+          </Link>
         </div>
         <div className='items-center w-1/3'>
-          <a className='text-white text-base hover:text-teal-400 hover:cursor-pointer mr-4'>
-            About
-          </a>
-          <a className='text-white text-base hover:text-teal-400 hover:cursor-pointer'>
-            Input Format
-          </a>
+          <Link href="/about">
+            <a className='text-white text-base hover:text-teal-400 hover:cursor-pointer mr-4'>
+              About
+            </a>
+          </Link>
+          <Link href="/format">
+            <a className='text-white text-base hover:text-teal-400 hover:cursor-pointer'>
+              File Format
+            </a>
+          </Link>
         </div>
       </div>
 
-      <div className='flex w-full bg-gray-900 h-40 items- border-y-2 border-teal-900'>
+      <div className='flex flex-row w-full bg-gray-900 h-1/6 items- border-y-2 border-teal-900'>
 
         <div className="w-1/6 flex flex-col shrink">
           <label className='uppercase text-teal-600 text-sm ml-6 mt-2 h-1/6'>Training Data</label>
@@ -425,6 +432,7 @@ export default function Index() {
           <ReactFlow 
             className="flex bg-gray-900 h-full w-full" 
             elements={elementList} 
+            minZoom={0.1}
             nodeTypes={{inputNode: FlowInputNode, biasNode: FlowBiasNode, outputNode: FlowOutputNode, layerNode: FlowLayerNode}}>
             <Background color="#fff"/>
             <Controls/>
@@ -438,7 +446,7 @@ export default function Index() {
               <p className=''>Error: <span className='text-sm'>{error}</span></p>
             </div>
           </div>
-          <div className='flex flex-col h-full text-[1em] break-all'>
+          <div className='flex flex-col h-full text-sm break-all'>
             <div className='flex flex-col mt-4 ml-4 text-white h-1/5'>
               <p className='mb-2 uppercase text-teal-600'>Input File</p>
               <input 
@@ -479,7 +487,7 @@ export default function Index() {
                   </a>
                 }
                 {!weightsDownloadable &&
-                  <button className='h-1/5 w-5/6  border-teal-500 border-2 rounded-xl uppercase cursor-not-allowed' title='Cannot download before training'>Download Model Weights</button>
+                  <button className='h-1/4 w-5/6  border-teal-500 border-2 rounded-xl uppercase cursor-not-allowed' title='Cannot download before training'>Download Model Weights</button>
                 }
               </div>
             }

@@ -77,12 +77,17 @@ Module.onRuntimeInitialized = async () => {
                     return;
                 }
 
-                const inputLength = jsonPairs[0]["in"].length;
-                const outputLength = jsonPairs[0]["out"].length;
+                const inputLength = jsonPairs[0]["input"]?.length;
+                const outputLength = jsonPairs[0]["output"]?.length;
+
+                if (!(inputLength && outputLength)) {
+                    postMessage({code: ReturnCode.JSONFormatError});
+                    return;
+                }
 
                 for (const [pairIndex, jsonPair] of jsonPairs.entries()) {
-                    const pairIn = jsonPair["in"];
-                    const pairOut = jsonPair["out"];
+                    const pairIn = jsonPair["input"];
+                    const pairOut = jsonPair["output"];
                     if (!(pairIn && pairOut) 
                         || pairIn.length != inputLength 
                         || pairOut.length != outputLength) {
@@ -99,7 +104,7 @@ Module.onRuntimeInitialized = async () => {
                 }
 
                 for (const jsonPair of jsonPairs) {
-                    nn.addTrainingPair([...jsonPair["in"], 1.0], jsonPair["out"]);
+                    nn.addTrainingPair([...jsonPair["input"], 1.0], jsonPair["output"]);
                 }
 
                 inputSize = inputLength + 1;

@@ -10,7 +10,7 @@ const LayerNodeCount = ({ layerIndex, destructor, count, onUpdate, editable}) =>
         }
 
         const newCountNum = Number.parseInt(newCount);
-        if (Number.isInteger(newCountNum) && newCountNum <= 256 && newCountNum > 0) {
+        if (Number.isInteger(newCountNum) && newCountNum <= 1000 && newCountNum > 0) {
             setNodeCount(newCountNum);
             onUpdate(layerIndex, newCountNum);
         }
@@ -40,7 +40,7 @@ const LayerNodeCount = ({ layerIndex, destructor, count, onUpdate, editable}) =>
             <div className='flex h-full text-white w-full'>
                 <input type="text" className={`bg-transparent text-center w-full outline-none ${editable ? "" : "cursor-not-allowed"}`}
                     defaultValue={nodeCount} 
-                    maxLength={3} 
+                    maxLength={4} 
                     onBlur={event => validateAndSetCount(event.target.value)}
                     onKeyDown={event => checkForEnter(event)}
                     disabled={!editable}
@@ -90,13 +90,13 @@ const LayerList = ({inputs, outputs, layers, onLayersSet, editable}) => {
         }
 
         const newInputNum = Number.parseInt(newInput);
-        if (Number.isInteger(newInputNum) && newInputNum <= 256 && newInputNum > 0) {
+        if (Number.isInteger(newInputNum) && newInputNum <= 1000 && newInputNum > 0) {
             setInputs(newInputNum);
         }
     }
 
     const validateInputOnBlur = (inputValue) => {
-        if (inputValue < 1 || inputValue > 256) {
+        if (inputValue < 1 || inputValue > 1000) {
             setInputs(1);
         }
     }
@@ -109,13 +109,13 @@ const LayerList = ({inputs, outputs, layers, onLayersSet, editable}) => {
         }
 
         const newOutputNum = Number.parseInt(newOutput);
-        if (Number.isInteger(newOutputNum) && newOutputNum <= 256 && newOutputNum > 0) {
+        if (Number.isInteger(newOutputNum) && newOutputNum <= 1000 && newOutputNum > 0) {
             setOutputs(newOutputNum);
         }
     }
 
     const validateOutputOnBlur = (outputValue) => {
-        if (outputValue < 1 || outputValue > 256) {
+        if (outputValue < 1 || outputValue > 1000) {
             setOutputs(1);
         }
     }
@@ -144,14 +144,14 @@ const LayerList = ({inputs, outputs, layers, onLayersSet, editable}) => {
         <div className='flex flex-row w-full justify-start'>
 
             <div className='flex flex-row w-1/6 border-2 border-teal-700 rounded-xl items-center overflow-hidden mr-4 shrink'>
-                <div className='flex w-1/2 bg-teal-700 text-gray-300 justify-center border-r-2 border-teal-700 h-full items-center text-[1em]'>
+                <div className='flex w-3/5 bg-teal-700 text-gray-300 justify-center border-r-2 border-teal-700 h-full items-center text-sm'>
                     <p className='w-full text-center items-center justify-center break-all'>Inputs</p>
                 </div>
-                <div className='flex flex-col w-1/2 h-full'>
+                <div className='flex flex-col w-2/5 h-full'>
                     <div className="flex h-full">
                         <input type="text" 
                             className={`flex w-full bg-transparent text-white shadow-none outline-none text-center text-xl ${editable ? "" : "cursor-not-allowed"}`}
-                            maxLength={3} 
+                            maxLength={4} 
                             value={inputCount}
                             onChange={event => {validateAndSetInput(event.target.value)}}
                             onBlur={event => {validateInputOnBlur(event.target.value)}}
@@ -176,14 +176,14 @@ const LayerList = ({inputs, outputs, layers, onLayersSet, editable}) => {
             </div>
 
             <div className='flex flex-row w-1/6 border-2 border-teal-700 rounded-xl items-center overflow-hidden ml-auto shrink' >
-                <div className='flex flex-shrink-0 w-1/2 bg-teal-700 text-gray-300 justify-center border-r-2 border-teal-700 h-full items-center text-[1em]'>
+                <div className='flex flex-shrink-0 w-3/5 bg-teal-700 text-gray-300 justify-center border-r-2 border-teal-700 h-full items-center text-sm'>
                     <p className='w-full justify-center items-center text-center break-all'>Outputs</p>
                 </div>
-                <div className='flex flex-col w-1/2 h-full'>
+                <div className='flex flex-col w-2/5 h-full'>
                     <div className="flex h-full">
                         <input type="text" 
                             className={`flex w-full bg-transparent text-white shadow-none outline-none text-center text-xl ${editable ? "" : "cursor-not-allowed"}`}
-                            maxLength={3} 
+                            maxLength={4} 
                             value={outputCount}
                             onChange={event => {validateAndSetOutput(event.target.value)}}
                             onBlur={event => {validateOutputOnBlur(event.target.value)}}

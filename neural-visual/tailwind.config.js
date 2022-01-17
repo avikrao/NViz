@@ -4,7 +4,11 @@ module.exports = {
     "./components/**/*.{js,ts,jsx,tsx}",  
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        'vietnam': ['"Be Vietnam Pro"']
+      }
+    },
   },
   plugins: [
     require('./node_modules/tailwind-percentage-heights-plugin')(),

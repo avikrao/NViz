@@ -16,6 +16,7 @@
     "exact-linspace": "^1.0.11",
     "next": "12.0.7",
     "react": "17.0.2",
+    "react-code-blocks": "0.0.9-0",
     "react-dom": "17.0.2",
     "react-flow-renderer": "^9.7.2",
     "tailwind-percentage-heights-plugin": "^0.1.4"
