@@ -1,6 +1,7 @@
 import Head from "next/head";
 import Link from "next/link";
 import { CodeBlock, obsidian } from "react-code-blocks";
+import prefix from "../utils/prefix";
 
 export default function Format() {
 
@@ -32,12 +33,13 @@ export default function Format() {
     return (
         <div className='site flex flex-col h-full w-full bg-gray-900 font-vietnam'>
             <Head>
+                <link rel='shortcut icon' href={`${prefix}/images/favicon.ico`}/>
                 <title>NViz | Format</title>
             </Head>
             <div className='flex flex-row w-full bg-gray-900 h-20 items-center border-b-2 border-teal-900'>
                 <div className='ml-6 mr-6'>
                     <Link href="/">
-                        <a className='flex flex-row text-white text-2xl items-center hover:text-white'><img src="/images/favicon.ico" className='h-10 mr-4'></img>NViz</a>
+                        <a className='flex flex-row text-white text-2xl items-center hover:text-white'><img src={`${prefix}/images/favicon.ico`} className='h-10 mr-4'></img>NViz</a>
                     </Link>
                 </div>
                 <div className='items-center w-1/3'>
@@ -57,9 +59,9 @@ export default function Format() {
                         <a className='flex flex-row' target="_blank" href='https://github.com/AvikRao/NViz'>
                             <p className='flex text-center items-center justify-center mr-4 text-gray-500 cursor-default'>Made by Avik Rao</p>
                             <img className='h-full cursor-pointer'
-                                src="/images/github.svg" 
-                                onMouseOver={event => event.target.src = "/images/github-color.svg"}
-                                onMouseOut={event => event.target.src = "/images/github.svg"}
+                                src={`${prefix}/images/github.svg`}
+                                onMouseOver={event => event.target.src = `${prefix}/images/github-color.svg`}
+                                onMouseOut={event => event.target.src = `${prefix}/images/github.svg`}
                             />
                         </a>
                     </div>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import ReactFlow, { addEdge, Background, Controls } from 'react-flow-renderer';
 import linspace from "exact-linspace";
 import chroma from "chroma-js";
+import prefix from '../utils/prefix';
 import LayerList from '../components/LayerList';
 import FlowInputNode from '../components/FlowInputNode';
 import FlowBiasNode from '../components/FlowBiasNode';
@@ -42,7 +43,7 @@ export default function Index() {
   const worker = useRef(null);
 
   useEffect(() => {
-    worker.current = new Worker("worker.js");
+    worker.current = new Worker(`${prefix}/worker.js`);
     worker.current.addEventListener("message", message => {
       switch(message.data.code) {
         case ReturnCode.ModuleReady :
@@ -321,7 +322,7 @@ export default function Index() {
     <div className='site flex flex-col h-screen w-screen font-vietnam'>
 
       <Head>
-        <link rel='shortcut icon' href="/images/favicon.ico"/>
+        <link rel='shortcut icon' href={`${prefix}/images/favicon.ico`}/>
         <title>NViz | Home</title>
       </Head>
 
@@ -330,7 +331,7 @@ export default function Index() {
       <div className='flex flex-row w-full bg-gray-900 h-1/10 items-center'>
         <div className='ml-6 mr-6'>
           <Link href="/">
-            <a className='flex flex-row text-white text-2xl items-center hover:text-white'><img src="/images/favicon.ico" className='h-10 mr-4'></img>NViz</a>
+            <a className='flex flex-row text-white text-2xl items-center hover:text-white'><img src={`${prefix}/images/favicon.ico`} className='h-10 mr-4'></img>NViz</a>
           </Link>
         </div>
         <div className='justify-center items-center w-1/3'>
@@ -350,9 +351,9 @@ export default function Index() {
             <a className='flex flex-row' target="_blank" href='https://github.com/AvikRao/NViz'>
               <p className='flex text-center items-center justify-center mr-4 text-gray-500 cursor-default'>Made by Avik Rao</p>
               <img className='h-full cursor-pointer'
-                src="/images/github.svg" 
-                onMouseOver={event => event.target.src = "/images/github-color.svg"}
-                onMouseOut={event => event.target.src = "/images/github.svg"}
+                src={`${prefix}/images/github.svg`}
+                onMouseOver={event => event.target.src = `${prefix}/images/github-color.svg`}
+                onMouseOut={event => event.target.src = `${prefix}/images/github.svg`}
               />
             </a>
           </div>
