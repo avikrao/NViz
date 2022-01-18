@@ -52,7 +52,21 @@ export default function Format() {
                         </a>
                     </Link>
                 </div>
+                <div className='flex flex-row ml-auto w-1/4 h-full items-center justify-end'>
+                    <div className='flex flex-row w-5/12 h-1/3 justify-end mr-4'>
+                        <a className='flex flex-row' target="_blank" href='google.com'>
+                            <p className='flex text-center items-center justify-center mr-4 text-gray-500 cursor-default'>Made by Avik Rao</p>
+                            <img className='h-full cursor-pointer'
+                                src="/images/github.svg" 
+                                onMouseOver={event => event.target.src = "/images/github-color.svg"}
+                                onMouseOut={event => event.target.src = "/images/github.svg"}
+                            />
+                        </a>
+                    </div>
+                </div>
             </div>
+
+
             <div className="flex flex-col w-full h-full bg-gray-900">
                 <div className='flex flex-col mt-24 text-white justify-center items-center'>
                     <div className="flex items-center justify-center mb-8">

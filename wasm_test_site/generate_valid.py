@@ -22,7 +22,7 @@ def main() :
     for i in range(pair_count) :
         x = random.uniform(-1.5, 1.5)
         y = random.uniform(-1.5, 1.5)
-        obj["data"].append({"in": [x, y], "out": [check(x, y)]})
+        obj["data"].append({"input": [x, y], "output": [check(x, y)]})
 
     with open("dataset.json", "w") as f :
         json.dump(obj, f, indent=2)

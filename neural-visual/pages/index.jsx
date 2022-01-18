@@ -44,7 +44,6 @@ export default function Index() {
   useEffect(() => {
     worker.current = new Worker("worker.js");
     worker.current.addEventListener("message", message => {
-      console.log(message.data.code);
       switch(message.data.code) {
         case ReturnCode.ModuleReady :
           worker.current.postMessage({code: MessageCode.LayersSet, layers: layerList});
@@ -81,7 +80,6 @@ export default function Index() {
         case ReturnCode.JSONSuccess :
           return;
         case ReturnCode.PredictionSuccess :
-          console.log(message.data.outputs);
           setPredicted(true);
           const outputFile = new Blob([JSON.stringify(message.data.outputs, null, 4)], { type: "application/json" });
           setOutputsDownloadURL(URL.createObjectURL(outputFile));
@@ -321,28 +319,43 @@ export default function Index() {
   return (
 
     <div className='site flex flex-col h-screen w-screen font-vietnam'>
+
       <Head>
         <link rel='shortcut icon' href="/images/favicon.ico"/>
         <title>NViz | Home</title>
       </Head>
+
       <ErrorModal open={modalOpen} onClose={onModalClose} error={modalCode}></ErrorModal>
+
       <div className='flex flex-row w-full bg-gray-900 h-1/10 items-center'>
         <div className='ml-6 mr-6'>
           <Link href="/">
             <a className='flex flex-row text-white text-2xl items-center hover:text-white'><img src="/images/favicon.ico" className='h-10 mr-4'></img>NViz</a>
           </Link>
         </div>
-        <div className='items-center w-1/3'>
+        <div className='justify-center items-center w-1/3'>
           <Link href="/about">
-            <a className='text-white text-base hover:text-teal-400 hover:cursor-pointer mr-4'>
+            <a className='text-white text-base hover:text-teal-400 hover:cursor-pointer mr-4 align-text-top'>
               About
             </a>
           </Link>
           <Link href="/format">
-            <a className='text-white text-base hover:text-teal-400 hover:cursor-pointer'>
+            <a className='text-white text-base hover:text-teal-400 hover:cursor-pointer align-text-top'>
               File Format
             </a>
           </Link>
+        </div>
+        <div className='flex flex-row ml-auto w-1/4 h-full items-center justify-end'>
+          <div className='flex flex-row w-5/12 h-1/3 justify-end mr-4'>
+            <a className='flex flex-row' target="_blank" href='google.com'>
+              <p className='flex text-center items-center justify-center mr-4 text-gray-500 cursor-default'>Made by Avik Rao</p>
+              <img className='h-full cursor-pointer'
+                src="/images/github.svg" 
+                onMouseOver={event => event.target.src = "/images/github-color.svg"}
+                onMouseOut={event => event.target.src = "/images/github.svg"}
+              />
+            </a>
+          </div>
         </div>
       </div>
 
