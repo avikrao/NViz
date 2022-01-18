@@ -55,8 +55,8 @@ export default function Format() {
                     </Link>
                 </div>
                 <div className='flex flex-row ml-auto w-1/4 h-full items-center justify-end'>
-                    <div className='flex flex-row w-5/12 h-1/3 justify-end mr-4'>
-                        <a className='flex flex-row' target="_blank" href='https://github.com/AvikRao/NViz'>
+                    <div className='flex flex-row w-1/2 h-1/3 justify-end mr-4'>
+                        <a className='flex flex-row justify-end' target="_blank" href='https://github.com/AvikRao/NViz'>
                             <p className='flex text-center items-center justify-center mr-4 text-gray-500 cursor-default'>Made by Avik Rao</p>
                             <img className='h-full cursor-pointer'
                                 src={`${prefix}/images/github.svg`}
@@ -84,7 +84,7 @@ export default function Format() {
                                 theme={obsidian}
                             />
                         </div>
-                        <p className="text-xl">Several sample datasets can be found on the GitHub repo.</p> 
+                        <p className="text-xl">Several sample datasets can be found on the <a href="https://github.com/AvikRao/NViz/tree/master/datasets" target="_blank">GitHub repository.</a></p> 
                     </div>
                     <div className="flex items-center justify-center mb-8">
                         <h1 className="text-white text-4xl underline">Input Format</h1>
@@ -100,7 +100,7 @@ export default function Format() {
                                 theme={obsidian}
                             />
                         </div>
-                        <p className="text-xl">Sample input files for each of the sample training datasets can also be found on the GitHub repo.</p> 
+                        <p className="text-xl">Sample input files for each of the sample training datasets can also be found on the <a href="https://github.com/AvikRao/NViz/tree/master/datasets" target="_blank">GitHub repository.</a></p> 
                     </div>
                 </div>
             </div>

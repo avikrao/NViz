@@ -28,8 +28,8 @@ export default function About() {
                     </Link>
                 </div>
                 <div className='flex flex-row ml-auto w-1/4 h-full items-center justify-end'>
-                    <div className='flex flex-row w-5/12 h-1/3 justify-end mr-4'>
-                        <a className='flex flex-row' target="_blank" href='https://github.com/AvikRao/NViz'>
+                    <div className='flex flex-row w-1/2 h-1/3 justify-end mr-4'>
+                        <a className='flex flex-row justify-end' target="_blank" href='https://github.com/AvikRao/NViz'>
                             <p className='flex text-center items-center justify-center mr-4 text-gray-500 cursor-default'>Made by Avik Rao</p>
                             <img className='h-full cursor-pointer'
                                 src={`${prefix}/images/github.svg`}
@@ -63,6 +63,17 @@ export default function About() {
                             <p className='text-lg'>NViz is made with <Link href="https://nextjs.org/"><a target="_blank">Next.js</a></Link> and <a href="https://reactjs.org/" target="_blank">React</a> with <a href="https://tailwindcss.com/" target="_blank">Tailwind</a> for styling. 
                             It uses <a href="https://www.cplusplus.com/" target="_blank">C++</a> and <a href="https://webassembly.org/" target="_blank">WebAssembly</a> to train your model from directly within your browser at lightning-fast speeds!</p>
                         </div>
+                        <div id="open-source" className='mb-8'>
+                            <h2 className='text-2xl text-teal-500'>Is it open source?</h2>
+                            <p className='text-lg'>Absolutely! NViz is entirely open-source and available on <a href="https://github.com/AvikRao/NViz">GitHub. </a>
+                            If you enjoy NViz and find it helpful, consider leaving a star on the repository! If not, please feel free to file an issue and describe how you feel it could be improved. </p>
+                        </div>
+                        <div id="datasets" className='mb-8'>
+                            <h2 className='text-2xl text-teal-500'>I'd like to try NViz, but I don't have a dataset...</h2>
+                            <p className='text-lg'>NViz was created to help people develop a better understanding of the structure and training of neural networks on their own datasets, but if 
+                            you just want to experiment with the site and explore its capabilities, that's perfectly fine! A number of feasible datasets are readily available on the <a href="https://github.com/AvikRao/NViz/tree/master/datasets" target="_blank">GitHub repository</a> for you to use.
+                            If you would like to train on your own dataset, follow the <Link href="/format"><a target="_blank">format guide</a></Link> for structuring your data files.</p>
+                        </div>
                         <div id="limits" className='mb-8'>
                             <h2 className='text-2xl text-teal-500'>What are its limitations?</h2>
                             <p className='text-lg'>As mentioned, NViz can visualize and train multilayer perceptron feed-forward neural networks. 
@@ -76,7 +87,7 @@ export default function About() {
                     <div className='w-3/5 h-full'>
                         <h1 className='text-4xl underline mb-8'>Technical Information</h1>
                         <div id="bias" className='mb-8'>
-                            <h2 className='text-2xl text-teal-500'>What is the extra yellow node in the input layer?</h2>
+                            <h2 className='text-2xl text-teal-500'>What is the extra <span className="text-yellow-300">yellow</span> node in the input layer?</h2>
                             <p className='text-lg'>The extra node in the input layer is called a <a href="https://www.pico.net/kb/the-role-of-bias-in-neural-networks/" target="_blank">bias</a>. 
                             Consider it an extra, constant input that acts like a battery providing continuous power to your network.</p>
                         </div>

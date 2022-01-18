@@ -347,8 +347,8 @@ export default function Index() {
           </Link>
         </div>
         <div className='flex flex-row ml-auto w-1/4 h-full items-center justify-end'>
-          <div className='flex flex-row w-5/12 h-1/3 justify-end mr-4'>
-            <a className='flex flex-row' target="_blank" href='https://github.com/AvikRao/NViz'>
+          <div className='flex flex-row w-1/2 h-1/3 justify-end mr-4'>
+            <a className='flex flex-row justify-end' target="_blank" href='https://github.com/AvikRao/NViz'>
               <p className='flex text-center items-center justify-center mr-4 text-gray-500 cursor-default'>Made by Avik Rao</p>
               <img className='h-full cursor-pointer'
                 src={`${prefix}/images/github.svg`}
@@ -401,7 +401,7 @@ export default function Index() {
               </input>
               <input 
                 type="text" 
-                className=' ml-4 w-1/3 bg-transparent text-sm' 
+                className=' ml-4 w-1/3 bg-transparent text-xs' 
                 defaultValue={learningRate} 
                 ref={textLearningRate} 
                 onBlur={event => validateLearningRate(event.target.value)}>
@@ -412,7 +412,7 @@ export default function Index() {
             <div className='flex flex-row mb-1'>
               <input 
                 type="range" 
-                className="range range-accent w-2/3" 
+                className="range range-accent w-3/5" 
                 max={trainingSpeedLimits[1]} 
                 min={trainingSpeedLimits[0]} 
                 onChange={event => setTrainingSpeedSlider(event.target.value)} 
@@ -420,7 +420,7 @@ export default function Index() {
               </input>
               <input 
                 type="text" 
-                className=' ml-4 w-1/3 bg-transparent text-sm' 
+                className=' ml-4 w-2/5 bg-transparent text-xs' 
                 defaultValue={trainingSpeed} 
                 ref={textTrainingSpeed} 
                 onBlur={event => validateTrainingSpeed(event.target.value)}>
@@ -506,14 +506,14 @@ export default function Index() {
                   </a>
                 }
                 {!weightsDownloadable &&
-                  <button className='h-1/4 w-5/6  border-teal-500 border-2 rounded-xl uppercase cursor-not-allowed' title='Cannot download before training'>Download Model Weights</button>
+                  <button className='h-3/10 w-5/6 border-teal-500 border-2 rounded-xl uppercase cursor-not-allowed whitespace-normal' title='Cannot download before training'>Download Model Weights</button>
                 }
               </div>
             }
             {trainingState  &&
               <div className='flex flex-col h-1/2 w-full items-center justify-center'>
                 <button className='h-1/5 w-5/6  border-teal-500 border-2 rounded-xl uppercase mb-8 cursor-not-allowed' title="Cannot download during training">Download Outputs</button>
-                <button className='h-1/5 w-5/6  border-teal-500 border-2 rounded-xl uppercase cursor-not-allowed' title='Cannot download during training'>Download Model Weights</button>
+                <button className='h-1/5 w-5/6  border-teal-500 border-2 rounded-xl uppercase cursor-not-allowed whitespace-normal' title='Cannot download during training'>Download Model Weights</button>
               </div>
             }
           </div>
