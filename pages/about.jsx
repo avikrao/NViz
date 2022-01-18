@@ -1,7 +1,7 @@
 import Head from "next/head";
 import Link from "next/link";
 import Image from "next/image";
-import NetworkImage from "../public/network.png";
+import NetworkImage from "../public/images/network.png";
 
 export default function About() {
     return (
