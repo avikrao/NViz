@@ -58,7 +58,7 @@ const ErrorModal = ({open, onClose, error}) => {
                 setErrorDescription("An unknown error occurred. Please try again or report this issue on GitHub.");
                 return;
         }
-    });
+    }, [error]);
 
     return (
         <Modal open={open} onClose={onClose}>

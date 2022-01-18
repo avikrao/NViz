@@ -54,7 +54,7 @@ export default function Format() {
                 </div>
                 <div className='flex flex-row ml-auto w-1/4 h-full items-center justify-end'>
                     <div className='flex flex-row w-5/12 h-1/3 justify-end mr-4'>
-                        <a className='flex flex-row' target="_blank" href='google.com'>
+                        <a className='flex flex-row' target="_blank" href='https://github.com/AvikRao/NViz'>
                             <p className='flex text-center items-center justify-center mr-4 text-gray-500 cursor-default'>Made by Avik Rao</p>
                             <img className='h-full cursor-pointer'
                                 src="/images/github.svg" 
@@ -73,7 +73,7 @@ export default function Format() {
                         <h1 className="text-white text-4xl underline">Training Data Format</h1>
                     </div>
                     <div className="flex flex-col w-1/2 mb-12">
-                        <p className="text-xl mb-8">The training data you upload must be in the format of a JSON file with several input-output pairs stored in an array with key "data".</p>
+                        <p className="text-xl mb-8">The training data you upload must be in the format of a JSON file with several input-output pairs stored in an array with key &ldquo;data&rdquo;.</p>
                         <div className="rounded-2xl overflow-hidden px-4 bg-[#282B2E] mb-4">
                             <CodeBlock
                                 text={exampleTrainingObj}
@@ -89,7 +89,7 @@ export default function Format() {
                     </div>
                     <div className="flex flex-col w-1/2 mb-16">
                         <p className="text-xl mb-8">The input data you upload for prediction testing must be in the format of a JSON file with several input arrays 
-                            (each of the size corresponding to your network's architecture) stored in an array with key "inputs".</p>
+                            (each of the size corresponding to your network's architecture) stored in an array with key &ldquo;inputs&rdquo;.</p>
                         <div className="rounded-2xl overflow-hidden px-4 bg-[#282B2E] mb-4">
                             <CodeBlock
                                 text={exampleInputObj}

@@ -80,7 +80,7 @@ const LayerList = ({inputs, outputs, layers, onLayersSet, editable}) => {
 
     useEffect(() => {
         onLayersSet([inputCount, ...layerCounts, outputCount]);
-    }, [layerCounts, outputCount, inputCount])
+    }, [layerCounts, outputCount, inputCount, onLayersSet])
 
     const validateAndSetInput = (newInput) => {
 

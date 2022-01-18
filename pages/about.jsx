@@ -1,7 +1,5 @@
 import Head from "next/head";
 import Link from "next/link";
-import Image from "next/image";
-import NetworkImage from "../public/images/network.png";
 
 export default function About() {
     return (
@@ -29,7 +27,7 @@ export default function About() {
                 </div>
                 <div className='flex flex-row ml-auto w-1/4 h-full items-center justify-end'>
                     <div className='flex flex-row w-5/12 h-1/3 justify-end mr-4'>
-                        <a className='flex flex-row' target="_blank" href='google.com'>
+                        <a className='flex flex-row' target="_blank" href='https://github.com/AvikRao/NViz'>
                             <p className='flex text-center items-center justify-center mr-4 text-gray-500 cursor-default'>Made by Avik Rao</p>
                             <img className='h-full cursor-pointer'
                                 src="/images/github.svg" 
@@ -45,7 +43,7 @@ export default function About() {
                 <div className='flex flex-col mt-24 text-white justify-center text-center items-center'>
                     <h1 className='text-4xl underline mb-4'>About NViz</h1>
                     <div className='w-1/2 h-1/2'>
-                        <Image src={NetworkImage}></Image>
+                        <img src="/images/network.png"></img>
                     </div>
                     <div className='w-3/5 h-full mb-12'>
                         <div id="about" className='mb-8'>
@@ -55,12 +53,12 @@ export default function About() {
                         <div id="use" className='mb-8'>
                             <h2 className='text-2xl text-teal-500'>What can I use it for?</h2>
                             <p className='text-lg'>You can use NViz for training, visualizing, and experimenting with a variety of different feed-forward neural network architectures on your own training datasets. 
-                            Simply provide a dataset in the <a href="/format" target="_blank">correct format</a>, adjust the settings as you see fit, and press train to see your neural network in action! 
+                            Simply provide a dataset in the <Link href="/format"><a target="_blank">correct format</a></Link>, adjust the settings as you see fit, and press train to see your neural network in action! 
                             You can provide an input file to test your model's predictions, or you can download the model's weights for your own use.</p>
                         </div>
                         <div id="made" className='mb-8'>
                             <h2 className='text-2xl text-teal-500'>What is it made with?</h2>
-                            <p className='text-lg'>NViz is made with <a href="https://nextjs.org/" target="_blank">Next.js</a> and <a href="https://reactjs.org/" target="_blank">React</a> with <a href="https://tailwindcss.com/" target="_blank">Tailwind</a> for styling. 
+                            <p className='text-lg'>NViz is made with <Link href="https://nextjs.org/"><a target="_blank">Next.js</a></Link> and <a href="https://reactjs.org/" target="_blank">React</a> with <a href="https://tailwindcss.com/" target="_blank">Tailwind</a> for styling. 
                             It uses <a href="https://www.cplusplus.com/" target="_blank">C++</a> and <a href="https://webassembly.org/" target="_blank">WebAssembly</a> to train your model from directly within your browser at lightning-fast speeds!</p>
                         </div>
                         <div id="limits" className='mb-8'>

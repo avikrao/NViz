@@ -347,7 +347,7 @@ export default function Index() {
         </div>
         <div className='flex flex-row ml-auto w-1/4 h-full items-center justify-end'>
           <div className='flex flex-row w-5/12 h-1/3 justify-end mr-4'>
-            <a className='flex flex-row' target="_blank" href='google.com'>
+            <a className='flex flex-row' target="_blank" href='https://github.com/AvikRao/NViz'>
               <p className='flex text-center items-center justify-center mr-4 text-gray-500 cursor-default'>Made by Avik Rao</p>
               <img className='h-full cursor-pointer'
                 src="/images/github.svg" 
