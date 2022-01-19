@@ -163,7 +163,7 @@ Module.onRuntimeInitialized = async () => {
                     for (let i = 0; i < predictedOutput.size(); i++) {
                         outputList.push(predictedOutput.get(i));
                     }
-                    predictionOutputs["outputs"].push(outputList);
+                    predictionOutputs["outputs"].push({"inputs": inputList.slice(0, inputList.length-1), "outputs": outputList});
                 }
 
                 postMessage({code: ReturnCode.PredictionSuccess, outputs: predictionOutputs});
