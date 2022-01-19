@@ -80,7 +80,7 @@ export default function About() {
                             While fairly general, these aren't as robust or versatile as other, more complex models such as <a href="https://en.wikipedia.org/wiki/Recurrent_neural_network" target="_blank">recurrent neural networks</a> (RNNs).
                             NViz also allows a maximum of 1000 nodes in any individual layer to ease the load on your browser.
                             Additionally, all models trained on NViz make use of the <a href="https://en.wikipedia.org/wiki/Logistic_function" target="_blank">Sigmoid</a> <a href="https://en.wikipedia.org/wiki/Activation_function" target="_blank">activation function</a> at hidden layers. 
-                            Other activation functions such as ReLU and tanh may be better suited depending on the purpose of the neural network.
+                            Sigmoid outputs are scaled from 0 to 1, so training data must have accordingly normalized outputs. Other activation functions such as ReLU and tanh may be better suited depending on the purpose of the neural network.
                             In the future, NViz will support the selection of different activation functions based on model purpose. </p>
                         </div>
                     </div>

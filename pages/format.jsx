@@ -8,16 +8,16 @@ export default function Format() {
     const exampleTrainingObj = "{ \n\
         data: [ \n\
             { \n\
-                input: [1.24, 0.53, 0.72],\n\
-                output: [1.02, 0.65] \n\
+                input: [1.24, -0.53, 0.72],\n\
+                output: [0.91, 0.65] \n\
             },  \n\
             { \n\
-                input: [1.24, 0.53, 0.72], \n\
-                output: [1.02, 0.65] \n\
+                input: [-0.66, 0.74, -0.04], \n\
+                output: [1, 0] \n\
             }, \n\
             { \n\
-                input: [1.24, 0.53, 0.72], \n\
-                output: [1.02, 0.65] \n\
+                input: [-1.26, -0.43, 0.72], \n\
+                output: [0.88, 0.36] \n\
             }, \n\
             ... \n\
         ] \n}";
@@ -75,7 +75,8 @@ export default function Format() {
                         <h1 className="text-white text-4xl underline">Training Data Format</h1>
                     </div>
                     <div className="flex flex-col w-1/2 mb-12">
-                        <p className="text-xl mb-8">The training data you upload must be in the format of a JSON file with several input-output pairs stored in an array with key &ldquo;data&rdquo;.</p>
+                        <p className="text-xl mb-8">The training data you upload must be in the format of a JSON file with several pairs of input and output vectors stored in an array with key &ldquo;data&rdquo;. 
+                        <strong> Outputs must be normalized</strong> (scaled 0-1).</p>
                         <div className="rounded-2xl overflow-hidden px-4 bg-[#282B2E] mb-4">
                             <CodeBlock
                                 text={exampleTrainingObj}
