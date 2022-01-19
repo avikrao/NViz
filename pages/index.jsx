@@ -465,7 +465,7 @@ export default function Index() {
               <p className=''>Error: <span className='text-sm'>{error}</span></p>
             </div>
           </div>
-          <div className='flex flex-col h-full text-sm break-all'>
+          <div className='flex flex-col h-full text-sm'>
             <div className='flex flex-col mt-4 ml-4 text-white h-1/5'>
               <p className='mb-2 uppercase text-teal-600'>Input File</p>
               <input 
